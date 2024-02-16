@@ -14,3 +14,5 @@
    1. 
 7. Document regeneration via Github actions
    1. 
+8. Hosting
+   1. 
