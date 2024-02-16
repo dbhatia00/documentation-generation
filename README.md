@@ -1,7 +1,7 @@
 # documentation-generation
 
 ## Overview
-Documentation is difficult to write and keep up to date.  Tools exist to generate rudimentary JavaDoc for Java programs, but the result isn’t particularly helpful as it just gives parameter names and return types from the signature and no useful information.  The goal of this project is to provide a more reasonable initial JavaDoc using LLMs and other tools.  There have been a number of research efforts along this line that could be a good starting point.
+Documentation is difficult to write and keep up to date.  Tools exist to generate rudimentary JavaDoc for Java programs, but the result isn’t particularly helpful as it just gives parameter names and return types from the signature and no useful information.  The goal of this project is to provide a more reasonable initial documentation source using LLMs and other tools.  There have been a number of research efforts along this line that could be a good starting point.
 
 ## Initial Implementation Goals
 
