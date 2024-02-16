@@ -12,7 +12,7 @@
 5. Database
    1. 
 6. Interfacing with the confluence API
-   1. 
+   1. Helen
 7. Document regeneration via Github app
    1. Riley
 8. Hosting
