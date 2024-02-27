@@ -10,7 +10,7 @@
 4. Documentation / Due Dates
    1. Dev
 5. Database
-   1. 
+   1. Sudham
 6. Interfacing with the confluence API
    1. Helen
    2. Yanan
