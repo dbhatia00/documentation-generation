@@ -11,7 +11,7 @@
    1. Dev
 5. Database
    1. Sudham
-6. Interfacing with the confluence API
+6. Interfacing with the confluence API (Parsing output of LLM and formatting it)
    1. Helen
    2. Yanan
 7. Document regeneration via Github app
