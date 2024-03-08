@@ -19,7 +19,9 @@
    1. The initial implementation of our project will be a web app that, when provided with a github link, generates a confluence page describing what the app does based on classes/methods within.
 2. Output Structure
    1. The confluence pages shall follow the same file structure as the source code and shall have a one to one mapping. Each page shall describe the source code at the functional level, ensuring that the source code is covered to an acceptable level.
-3. Use of the LLM
+3. Manual Editing
+   1. When the confluence page is displayed to the uder, they will have the ability to manually update text within the documentation. The documentation will be able to be pushed to the source repository via a button click on the same page.  
+4. Use of the LLM
    1. We will be implementing a Retrieval-Augmented Generation (RAG) backend. RAG is the process of optimizing the output of a large language model, so it references an authoritative knowledge base outside of its training data sources before generating a response. The Retrieval-Augmented Generation (RAG) approach enhances Large Language Models (LLMs) by integrating a step to fetch new data based on user inputs, thus improving response accuracy. This process involves collecting new information from diverse sources (a code base in our use case) and converting it into a format the LLM can search
-4. Automated Updating
+5. Automated Updating
    1. As far as updating goes, we will integrate Github Actions with our implementation such that a push to main in a hypothetical target repository would trigger a regeneration of the confluence page. This will ensure that the documentation remains up to date
