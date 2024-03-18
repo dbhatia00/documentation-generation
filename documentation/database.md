@@ -30,7 +30,7 @@ The output of this service returns the document from MongoDB. The format of the 
 ```
 
 # Main Functionalities
-This service parses the JSON output of our RAG service into a structured HTML page, and then feeds the HTML to a Confluence API request. We intend to use the `Create page` endpoint of the Confluence REST API for each page (one project page and many per-file pages). This service handles the responses from the Confluence API, outputting a link to the Confluence Space if pages were successfully created, or handles any error properly. API calls will be issued in a concurrent manner. 
+This service stores the combined RAG results for the all the files in the github resposity, along with the file structure and the links required to uniquely identify a repository. We will be using classic database connection managers to achieve CRUD operations along with the functionality to create the required DTO. 
 
 Main components:
 1. CRUD operations
