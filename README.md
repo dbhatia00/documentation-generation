@@ -14,3 +14,27 @@ We will be implementing a Retrieval-Augmented Generation (RAG) backend. RAG is t
 
 ### Documentation Regeneration
 As far as updating goes, we will integrate Github Actions with our implementation such that a push to main in a hypothetical target repository would trigger a regeneration of the confluence page. This will ensure that the documentation remains up to date
+
+
+# Run instructions
+
+## Backend
+1. python3 -m venv env
+2. source env/bin/activate
+3. pip install flask
+4. pip install python-dotenv
+5. pip install requests
+6. cd flask-be
+7. flask run
+
+The backend should now be running
+
+## Frontend
+1. cd flask_react
+2. npm start
+
+The frontend screen should now be running
+
+## Usage
+Enter a github url in the following form - 
+*{username}/{repo name}*
