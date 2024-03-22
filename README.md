@@ -30,7 +30,7 @@ As far as updating goes, we will integrate Github Actions with our implementatio
 The backend should now be running
 
 ## Frontend
-1. cd flask_react
+1. cd react_fe
 2. npm start
 
 The frontend screen should now be running
