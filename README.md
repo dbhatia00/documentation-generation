@@ -31,7 +31,8 @@ The backend should now be running
 
 ## Frontend
 1. cd react_fe
-2. npm start
+2. npm install
+3. npm start
 
 The frontend screen should now be running
 
