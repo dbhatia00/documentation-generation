@@ -65,7 +65,7 @@ function App() {
   
   return (
     <div className="App">
-      <h1>GitHub README Viewer</h1>
+      <h1>Documentation Generation</h1>
       {/* URL Input */}
       <form onSubmit={handleSubmit}>
         <label>
@@ -80,8 +80,10 @@ function App() {
         {/* Get README Button */}
         <button type="submit">Fetch README</button>
       </form>
+      {/* Output Label */}
       {output && <p className="output">{output}</p>}
 
+      {/* Box to hold readme data */}
       {readmeContent && (
         <div className="readme">
           <h2>README.md</h2>
@@ -91,6 +93,7 @@ function App() {
             rows={10} 
             cols={80} 
           />
+          {/* Push edits to repository button */}
           <button onClick={handlePushEdits}>Push Edits</button>
         </div>
       )}
