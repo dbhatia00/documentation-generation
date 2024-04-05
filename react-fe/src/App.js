@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
+  // State variables to store repository URL, readme content, and output messages
+  // TODO: Remove all references to a README, replace with the generated documentation
   const [repoUrl, setRepoUrl] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
   const [output, setOutput] = useState('');
