@@ -18,6 +18,14 @@ As far as updating goes, we will integrate Github Actions with our implementatio
 
 # Run instructions
 
+## Files to create
+1. Make flask-be/token.json
+2. Create a personal access token following these instructions - https://docs.github.com/en/enterprise-server@3.9/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+3.  Put this into flask-be/token.json:
+    {
+        "github_token": "{your personal access token here}"
+    }
+
 ## Backend
 1. python3 -m venv env
 2. source env/bin/activate
@@ -31,7 +39,8 @@ The backend should now be running
 
 ## Frontend
 1. cd react_fe
-2. npm start
+2. npm install
+3. npm start
 
 The frontend screen should now be running
 
