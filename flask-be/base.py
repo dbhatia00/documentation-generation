@@ -6,6 +6,10 @@ import json
 
 app = Flask(__name__)
 
+# client id and secret needed for github oauth
+CLIENT_ID = "88ca09b0077cb16d7a39"
+CLIENT_SECRET = "3ff95633626be127d1513db0ba9a3aca56e9bebe"
+
 '''
     DESCRIPTION -   A function to handle the get_readme button click
     INPUTS -        Repository URL
@@ -64,18 +68,22 @@ def push_edits():
         if not repo_url or not new_readme_content:
             # Return an error response if either the repository URL or new README content is missing
             return jsonify({'error': 'Please provide a GitHub repository URL and new readme content'}), 400
+        
+        # use github access token from oauth instead of the personal token for authorization
+        authorization_header = request.headers.get('Authorization')
+        print(authorization_header)
 
-        # Retrieve GitHub token from a JSON file
-        with open('token.json') as f:
-            tokens = json.load(f)
-        github_token = str(tokens.get('github_token'))
+        # # Retrieve GitHub token from a JSON file
+        # with open('token.json') as f:
+        #     tokens = json.load(f)
+        # github_token = str(tokens.get('github_token'))
 
         # Construct the GitHub API URL to modify the README file
         api_url = f'https://api.github.com/repos/{repo_url}/contents/README.md'
         
         # Set headers for the GitHub API request
         headers = {
-            'Authorization': 'token ' + github_token,
+            'Authorization': authorization_header,
             'Accept': 'application/vnd.github.v3+json'
         }
 
@@ -158,6 +166,31 @@ def getBranchSHA(repo_url, headers, branch):
         # Return an error message if retrieval fails
         return jsonify({'error': f'Failed to retrieve SHA of latest commit on {branch} branch'}), 500
 
+@app.route('/api/get_access_token', methods=['GET'])
+def get_access_token():
+    try:
+        # Extract client code from frontend
+        client_code = request.args.get('code')
+        
+        if not client_code:
+            # Return an error response if the code is missing
+            return jsonify({'error': 'Login error with github'}), 400
+        
+        params = '?client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&code=' + client_code
+        get_access_token_url = "http://github.com/login/oauth/access_token" + params
+        headers = { 'Accept': 'application/json'}
+        
+        access_token_response = requests.get(get_access_token_url, headers=headers)
+        print(access_token_response.json())
+        
+        if access_token_response.status_code == 200:
+            return jsonify(access_token_response.json()), 200
+        else:
+            return jsonify({'error': f'Failed to fetch access token: {access_token_response.text}'}), 500
+        
+    except Exception as e:
+        # Return an error response if an exception occurs
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
