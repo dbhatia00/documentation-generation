@@ -71,8 +71,7 @@ def push_edits():
         
         # use github access token from oauth instead of the personal token for authorization
         authorization_header = request.headers.get('Authorization')
-        print(authorization_header)
-
+        
         # # Retrieve GitHub token from a JSON file
         # with open('token.json') as f:
         #     tokens = json.load(f)
@@ -181,7 +180,6 @@ def get_access_token():
         headers = { 'Accept': 'application/json'}
         
         access_token_response = requests.get(get_access_token_url, headers=headers)
-        print(access_token_response.json())
         
         if access_token_response.status_code == 200:
             return jsonify(access_token_response.json()), 200
