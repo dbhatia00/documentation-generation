@@ -1,6 +1,18 @@
 // frontend/src/App.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import clientInfo from './token_client.json';
+
+function loginWithClientId() {
+  // Adding more scope if needed in the future
+  const scopes = 'repo';
+  window.location.assign(
+    'https://github.com/login/oauth/authorize?client_id=' +
+      clientInfo.client_id +
+      '&scope=' +
+      scopes
+  );
+}
 
 function App() {
   // State variables to store repository URL, readme content, and output messages
@@ -8,6 +20,36 @@ function App() {
   const [repoUrl, setRepoUrl] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
   const [output, setOutput] = useState('');
+  const [rerender, setRerender] = useState(false);
+
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const codeParam = urlParams.get('code');
+
+    if (codeParam && localStorage.getItem('accessToken') === null) {
+      async function getAccessToken() {
+        await fetch('/api/get_access_token?code=' + codeParam, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then((response) => {
+            return response.json();
+          })
+          .then((data) => {
+            console.log(data);
+            if (data.access_token) {
+              localStorage.setItem('accessToken', data.access_token);
+              setRerender(!rerender);
+            }
+          });
+      }
+
+      getAccessToken();
+    }
+  }, [rerender]);
 
   // Button to handle the github URL and fetch the README
   const handleSubmit = async (e) => {
@@ -35,7 +77,7 @@ function App() {
       setOutput('Failed to fetch README');
     }
   };
-  
+
   // Button to push edits to git
   const handlePushEdits = async () => {
     try {
@@ -44,10 +86,14 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('accessToken'),
         },
-        body: JSON.stringify({ repo_url: repoUrl, readme_content: readmeContent }),
+        body: JSON.stringify({
+          repo_url: repoUrl,
+          readme_content: readmeContent,
+        }),
       });
-  
+
       // Waits for a successful push from the backend
       const data = await response.json();
       if (response.ok) {
@@ -64,10 +110,9 @@ function App() {
       setOutput('Failed to push edits');
     }
   };
-  
-  return (
-    <div className="App">
-      <h1>Documentation Generation</h1>
+
+  const fetchRepoButton = (
+    <div>
       {/* URL Input */}
       <form onSubmit={handleSubmit}>
         <label>
@@ -92,13 +137,38 @@ function App() {
           <textarea
             value={readmeContent}
             onChange={(e) => setReadmeContent(e.target.value)}
-            rows={10} 
-            cols={80} 
+            rows={10}
+            cols={80}
           />
           {/* Push edits to repository button */}
           <button onClick={handlePushEdits}>Push Edits</button>
         </div>
       )}
+    </div>
+  );
+
+  return (
+    <div className="App">
+      <h1>Documentation Generation</h1>
+      <div>
+        {localStorage.getItem('accessToken') ? (
+          <div>
+            {fetchRepoButton}
+            <button
+              onClick={() => {
+                localStorage.removeItem('accessToken');
+                setRerender(!rerender);
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div>
+            <button onClick={loginWithClientId}>Login with Github</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

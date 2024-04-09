@@ -1,3 +1,4 @@
 env
 .vscode
-flask-be/token.json
+flask-be/token_server.json
+react-fe/src/token_client.json
