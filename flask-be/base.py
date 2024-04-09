@@ -6,10 +6,6 @@ import json
 
 app = Flask(__name__)
 
-# client id and secret needed for github oauth
-CLIENT_ID = "88ca09b0077cb16d7a39"
-CLIENT_SECRET = "3ff95633626be127d1513db0ba9a3aca56e9bebe"
-
 '''
     DESCRIPTION -   A function to handle the get_readme button click
     INPUTS -        Repository URL
@@ -175,7 +171,8 @@ def get_access_token():
             # Return an error response if the code is missing
             return jsonify({'error': 'Login error with github'}), 400
         
-        params = '?client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&code=' + client_code
+        client_id, client_secret = retrieve_client_info()
+        params = '?client_id=' + client_id + '&client_secret=' + client_secret + '&code=' + client_code
         get_access_token_url = "http://github.com/login/oauth/access_token" + params
         headers = { 'Accept': 'application/json'}
         
@@ -189,6 +186,14 @@ def get_access_token():
     except Exception as e:
         # Return an error response if an exception occurs
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
+def retrieve_client_info(): 
+    # Retrieve GitHub token from a JSON file
+    with open('token.json') as f:
+        tokens = json.load(f)
+    client_id = str(tokens.get('client_id'))
+    client_secret = str(tokens.get('client_secret'))
+    return client_id, client_secret
 
 
 if __name__ == '__main__':

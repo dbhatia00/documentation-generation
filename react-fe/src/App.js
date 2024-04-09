@@ -1,15 +1,14 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
-
-const CLIENT_ID = '88ca09b0077cb16d7a39';
+import clientInfo from './token.json';
 
 function loginWithClientId() {
   // Adding more scope if needed in the future
   const scopes = 'repo';
   window.location.assign(
     'https://github.com/login/oauth/authorize?client_id=' +
-      CLIENT_ID +
+      clientInfo.client_id +
       '&scope=' +
       scopes
   );
@@ -50,7 +49,7 @@ function App() {
 
       getAccessToken();
     }
-  }, []);
+  }, [rerender]);
 
   // Button to handle the github URL and fetch the README
   const handleSubmit = async (e) => {
