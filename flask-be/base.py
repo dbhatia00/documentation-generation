@@ -189,7 +189,7 @@ def get_access_token():
     
 def retrieve_client_info(): 
     # Retrieve GitHub token from a JSON file
-    with open('token.json') as f:
+    with open('token_server.json') as f:
         tokens = json.load(f)
     client_id = str(tokens.get('client_id'))
     client_secret = str(tokens.get('client_secret'))

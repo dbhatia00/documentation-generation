@@ -1,7 +1,7 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import clientInfo from './token.json';
+import clientInfo from './token_client.json';
 
 function loginWithClientId() {
   // Adding more scope if needed in the future
