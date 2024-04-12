@@ -1,15 +1,15 @@
 // frontend/src/App.js
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import clientInfo from './token_client.json';
+import React, { useState, useEffect } from "react";
+import "./App.css";
+import clientInfo from "./token_client.json";
 
 function loginWithClientId() {
   // Adding more scope if needed in the future
-  const scopes = 'repo';
+  const scopes = "repo";
   window.location.assign(
-    'https://github.com/login/oauth/authorize?client_id=' +
+    "https://github.com/login/oauth/authorize?client_id=" +
       clientInfo.client_id +
-      '&scope=' +
+      "&scope=" +
       scopes
   );
 }
@@ -17,22 +17,22 @@ function loginWithClientId() {
 function App() {
   // State variables to store repository URL, readme content, and output messages
   // TODO: Remove all references to a README, replace with the generated documentation
-  const [repoUrl, setRepoUrl] = useState('');
-  const [readmeContent, setReadmeContent] = useState('');
-  const [output, setOutput] = useState('');
+  const [repoUrl, setRepoUrl] = useState("");
+  const [readmeContent, setReadmeContent] = useState("");
+  const [output, setOutput] = useState("");
   const [rerender, setRerender] = useState(false);
 
   useEffect(() => {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    const codeParam = urlParams.get('code');
+    const codeParam = urlParams.get("code");
 
-    if (codeParam && localStorage.getItem('accessToken') === null) {
+    if (codeParam && localStorage.getItem("accessToken") === null) {
       async function getAccessToken() {
-        await fetch('/api/get_access_token?code=' + codeParam, {
-          method: 'GET',
+        await fetch("/api/get_access_token?code=" + codeParam, {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         })
           .then((response) => {
@@ -41,7 +41,7 @@ function App() {
           .then((data) => {
             console.log(data);
             if (data.access_token) {
-              localStorage.setItem('accessToken', data.access_token);
+              localStorage.setItem("accessToken", data.access_token);
               setRerender(!rerender);
             }
           });
@@ -56,10 +56,10 @@ function App() {
     e.preventDefault();
     try {
       // Sends the repo URL to the backend
-      const response = await fetch('/api/get_readme', {
-        method: 'POST',
+      const response = await fetch("/api/get_readme", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ repo_url: repoUrl }),
       });
@@ -68,13 +68,13 @@ function App() {
       const data = await response.json();
       if (response.ok) {
         setReadmeContent(atob(data.readme_content)); // Decode base64 content
-        setOutput('');
+        setOutput("");
       } else {
-        setOutput(data.error || 'Failed to fetch README');
+        setOutput(data.error || "Failed to fetch README");
       }
     } catch (error) {
-      console.error('Error:', error);
-      setOutput('Failed to fetch README');
+      console.error("Error:", error);
+      setOutput("Failed to fetch README");
     }
   };
 
@@ -82,11 +82,11 @@ function App() {
   const handlePushEdits = async () => {
     try {
       // Send the updated text to the backend
-      const response = await fetch('/api/push_edits', {
-        method: 'POST',
+      const response = await fetch("/api/push_edits", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + localStorage.getItem('accessToken'),
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
         },
         body: JSON.stringify({
           repo_url: repoUrl,
@@ -98,16 +98,44 @@ function App() {
       const data = await response.json();
       if (response.ok) {
         // Clear Input fields
-        setRepoUrl('');
-        setReadmeContent('');
-        setOutput('Push successful!');
+        setRepoUrl("");
+        setReadmeContent("");
+        setOutput("Push successful!");
         console.log(data); // Log success message or handle as required
       } else {
-        setOutput(data.error || 'Failed to push edits');
+        setOutput(data.error || "Failed to push edits");
       }
     } catch (error) {
-      console.error('Error:', error);
-      setOutput('Failed to push edits');
+      console.error("Error:", error);
+      setOutput("Failed to push edits");
+    }
+  };
+  const handleSetupWebhook = async () => {
+    if (!repoUrl) {
+      setOutput(
+        "Please provide a GitHub repository URL before setting up a webhook."
+      );
+      return;
+    }
+    try {
+      const response = await fetch("/setup-webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setOutput("Webhook setup successfully!");
+      } else {
+        throw new Error(data.error || "Failed to set up webhook");
+      }
+    } catch (error) {
+      setOutput(`Error: ${error.message}`);
     }
   };
 
@@ -142,6 +170,9 @@ function App() {
           />
           {/* Push edits to repository button */}
           <button onClick={handlePushEdits}>Push Edits</button>
+          <button onClick={handleSetupWebhook}>
+            Listen to changes in Main
+          </button>
         </div>
       )}
     </div>
@@ -151,12 +182,13 @@ function App() {
     <div className="App">
       <h1>Documentation Generation</h1>
       <div>
-        {localStorage.getItem('accessToken') ? (
+        {localStorage.getItem("accessToken") ? (
           <div>
             {fetchRepoButton}
+
             <button
               onClick={() => {
-                localStorage.removeItem('accessToken');
+                localStorage.removeItem("accessToken");
                 setRerender(!rerender);
               }}
             >
