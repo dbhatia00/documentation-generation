@@ -7,9 +7,9 @@ import json
 app = Flask(__name__)
 
 '''
-    DESCRIPTION -   A function to handle the get_readme button click
+    DESCRIPTION -   A function to handle the get_doc button click
     INPUTS -        Repository URL
-    OUTPUTS -       Repository README or error
+    OUTPUTS -       Repository doc or error
     NOTES -         Outward facing (called from the Frontend)
 '''
 @app.route('/api/get_doc', methods=['POST'])
@@ -28,7 +28,14 @@ def get_doc():
     # Dummy content for the new file
     doc_content = "#This is a placeholder for the generated documentation"
 
-    ## TODO: Implement generation logic HERE. 
+    api_url = f'https://api.github.com/repos/{repo_url}/contents/'
+    response = requests.get(api_url)
+
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch source code from GitHub'}), 500
+
+    source_code_files = response.json()
+    ## TODO: Implement generation logic HERE. source_code_files now contains all of the repo's contents.
 
     # Return the dummy content as a JSON response
     return jsonify({'doc_content': doc_content})
@@ -46,24 +53,19 @@ def push_edits():
         # Extract JSON data from the request
         data = request.get_json()
 
-        # Retrieve the repository URL and new README content from the JSON data
+        # Retrieve the repository URL and new doc content from the JSON data
         repo_url = data.get('repo_url')
         new_doc_content = data.get('doc_content')
 
-        # Check if the repository URL and new README content are provided
+        # Check if the repository URL and new doc content are provided
         if not repo_url or not new_doc_content:
-            # Return an error response if either the repository URL or new README content is missing
+            # Return an error response if either the repository URL or new doc content is missing
             return jsonify({'error': 'Please provide a GitHub repository URL and new doc content'}), 400
         
         # use github access token from oauth instead of the personal token for authorization
         authorization_header = request.headers.get('Authorization')
-        
-        # # Retrieve GitHub token from a JSON file
-        # with open('token.json') as f:
-        #     tokens = json.load(f)
-        # github_token = str(tokens.get('github_token'))
 
-        # Construct the GitHub API URL to modify the README file
+        # Construct the GitHub API URL to modify the doc file
         api_url = f'https://api.github.com/repos/{repo_url}/contents/AUTOGEN-DOCUMENTATION.md'
         
         # Set headers for the GitHub API request
@@ -72,7 +74,6 @@ def push_edits():
             'Accept': 'application/vnd.github.v3+json'
         }
 
-        # TODO: Dynamically create a unique branch name to avoid collisions (i.e. this should always 404)
         # Check if the test branch exists
         branch_url = f'https://api.github.com/repos/{repo_url}/branches/documentation-generation'
         branch_response = requests.get(branch_url, headers=headers)
@@ -90,17 +91,34 @@ def push_edits():
             if create_branch_response.status_code != 201:
                 return jsonify({'error': 'Failed to create branch'}), 500
 
+        # Depending on if the doc exists already, alter the params passed to the request
+        doc_url = f'https://api.github.com/repos/{repo_url}/contents/AUTOGEN-DOCUMENTATION.md?ref=documentation-generation'
+        doc_response = requests.get(doc_url, headers=headers)
+        if doc_response.status_code == 200:
+            doc_sha = doc_response.json().get('sha')
+            params = {
+                'message': 'Generated Documentation',
+                'content': base64.b64encode(new_doc_content.encode()).decode(),
+                'branch': 'documentation-generation',
+                'sha': doc_sha
+            }
+        else:
+            params = {
+                'message': 'Generated Documentation',
+                'content': base64.b64encode(new_doc_content.encode()).decode(),
+                'branch': 'documentation-generation',
+            }
+
+
         # Push changes to the test branch
-        params = {
-            'message': 'Generated Documentation',
-            'content': base64.b64encode(new_doc_content.encode()).decode(),
-            'branch': 'documentation-generation'
-        }
         response = requests.put(api_url, headers=headers, json=params)
 
         if response.status_code == 201:
             # Return a success response if the file is created successfully
-            return jsonify({'success': 'File created successfully'}), 200
+            return jsonify({'success': 'Doc created successfully'}), 200
+        elif response.status_code == 200:
+            # Return a success response if the doc is updated successfully
+            return jsonify({'success': 'Doc updated successfully'}), 200
         else:
             # Return an error response if the file creation fails
             return jsonify({'error': f'Failed to create file: {response.text}'}), 500
