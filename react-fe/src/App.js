@@ -15,10 +15,10 @@ function loginWithClientId() {
 }
 
 function App() {
-  // State variables to store repository URL, readme content, and output messages
-  // TODO: Remove all references to a README, replace with the generated documentation
+  // State variables to store repository URL, doc content, and output messages
+  // TODO: Remove all references to a doc, replace with the generated documentation
   const [repoUrl, setRepoUrl] = useState("");
-  const [readmeContent, setReadmeContent] = useState("");
+  const [docContent, setdocContent] = useState("");
   const [output, setOutput] = useState("");
   const [rerender, setRerender] = useState(false);
 
@@ -51,12 +51,12 @@ function App() {
     }
   }, [rerender]);
 
-  // Button to handle the github URL and fetch the README
+  // Button to handle the github URL and fetch the doc
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       // Sends the repo URL to the backend
-      const response = await fetch("/api/get_readme", {
+      const response = await fetch("/api/get_doc", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,17 +64,17 @@ function App() {
         body: JSON.stringify({ repo_url: repoUrl }),
       });
 
-      // Acquires the readme content from the backend and dumps it in the box
+      // Acquires the doc content from the backend and dumps it in the box
       const data = await response.json();
       if (response.ok) {
-        setReadmeContent(atob(data.readme_content)); // Decode base64 content
+        setdocContent(data.doc_content); // Decode base64 content
         setOutput("");
       } else {
-        setOutput(data.error || "Failed to fetch README");
+        setOutput(data.error || "Failed to fetch doc");
       }
     } catch (error) {
       console.error("Error:", error);
-      setOutput("Failed to fetch README");
+      setOutput("Failed to fetch doc");
     }
   };
 
@@ -90,7 +90,7 @@ function App() {
         },
         body: JSON.stringify({
           repo_url: repoUrl,
-          readme_content: readmeContent,
+          doc_content: docContent,
         }),
       });
 
@@ -99,7 +99,7 @@ function App() {
       if (response.ok) {
         // Clear Input fields
         setRepoUrl("");
-        setReadmeContent("");
+        setdocContent("");
         setOutput("Push successful!");
         console.log(data); // Log success message or handle as required
       } else {
@@ -152,19 +152,19 @@ function App() {
             required
           />
         </label>
-        {/* Get README Button */}
-        <button type="submit">Fetch README</button>
+        {/* Get doc Button */}
+        <button type="submit">Fetch doc</button>
       </form>
       {/* Output Label */}
       {output && <p className="output">{output}</p>}
 
-      {/* Box to hold readme data */}
-      {readmeContent && (
-        <div className="readme">
-          <h2>README.md</h2>
+      {/* Box to hold doc data */}
+      {docContent && (
+        <div className="doc">
+          <h2>Generated Doc</h2>
           <textarea
-            value={readmeContent}
-            onChange={(e) => setReadmeContent(e.target.value)}
+            value={docContent}
+            onChange={(e) => setdocContent(e.target.value)}
             rows={10}
             cols={80}
           />
