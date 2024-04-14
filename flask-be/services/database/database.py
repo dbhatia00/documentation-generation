@@ -45,8 +45,10 @@ def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluen
     Returns:
     - dict or None: Returns an object of RepositoryConfluenceOutput representing the document if found, otherwise None.
     """
-    print(collection.find_one({"repository_url": repository_url}))
-    return RepositoryConfluenceOutput(**collection.find_one({"repository_url": repository_url}))
+    result = collection.find_one({"repository_url": repository_url})
+    if result:
+        return RepositoryConfluenceOutput(**result)
+    return None
 
 
 
