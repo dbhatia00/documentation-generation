@@ -1,18 +1,12 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import clientInfo from './token_client.json';
-
-function loginWithClientId() {
-  // Adding more scope if needed in the future
-  const scopes = 'repo';
-  window.location.assign(
-    'https://github.com/login/oauth/authorize?client_id=' +
-      clientInfo.client_id +
-      '&scope=' +
-      scopes
-  );
-}
+import {
+  loginWithClientId,
+  linkToConfluenceAccount,
+  getAccessToken,
+  getConfluenceAccessToken,
+} from './util/login';
 
 function App() {
   // State variables to store repository URL, doc content, and output messages
@@ -25,31 +19,25 @@ function App() {
   useEffect(() => {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
+    const stateParam = urlParams.get('state');
     const codeParam = urlParams.get('code');
 
-    if (codeParam && localStorage.getItem('accessToken') === null) {
-      async function getAccessToken() {
-        await fetch('/api/get_access_token?code=' + codeParam, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-          .then((response) => {
-            return response.json();
-          })
-          .then((data) => {
-            console.log(data);
-            if (data.access_token) {
-              localStorage.setItem('accessToken', data.access_token);
-              setRerender(!rerender);
-            }
-          });
-      }
-
-      getAccessToken();
+    if (
+      !stateParam &&
+      codeParam &&
+      localStorage.getItem('accessToken') === null
+    ) {
+      // fetch access token for github
+      getAccessToken(codeParam, rerender, setRerender);
     }
-  }, [rerender]);
+
+    if (
+      stateParam === 'confluence' &&
+      localStorage.getItem('confluenceAccessToken') === null
+    ) {
+      getConfluenceAccessToken(codeParam, rerender, setRerender);
+    }
+  }, []);
 
   // Button to handle the github URL and fetch the doc
   const handleSubmit = async (e) => {
@@ -67,7 +55,7 @@ function App() {
       // Acquires the doc content from the backend and dumps it in the box
       const data = await response.json();
       if (response.ok) {
-        setdocContent((data.doc_content)); // Decode base64 content
+        setdocContent(data.doc_content); // Decode base64 content
         setOutput('');
       } else {
         setOutput(data.error || 'Failed to fetch doc');
@@ -111,7 +99,47 @@ function App() {
     }
   };
 
-  const fetchRepoButton = (
+  // TODO: Adding more logic related to confluence here
+  const handleConfluencePush = () => {
+    console.log(
+      'push to confluence with access code',
+      localStorage.getItem('confluenceAccessToken')
+    );
+  };
+
+  const LinkConfluenceButton = (
+    <div
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+    >
+      {localStorage.getItem('confluenceAccessToken') ? (
+        <>
+          {!docContent && <p>You have linked to your Confluence account</p>}
+          <button
+            onClick={handleConfluencePush}
+            disabled={!docContent}
+            style={{ marginBottom: '20px', width: 'fit-content' }}
+          >
+            Push to Confluence
+          </button>
+        </>
+      ) : (
+        <>
+          <p>
+            You need to connect to your Confluence account to generate a
+            confluence doc:
+          </p>
+          <button
+            onClick={linkToConfluenceAccount}
+            style={{ marginBottom: '20px', width: 'fit-content' }}
+          >
+            Link To Confluence
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  const FetchRepoButton = (
     <div>
       {/* URL Input */}
       <form onSubmit={handleSubmit}>
@@ -153,10 +181,12 @@ function App() {
       <div>
         {localStorage.getItem('accessToken') ? (
           <div>
-            {fetchRepoButton}
+            {FetchRepoButton}
+            {LinkConfluenceButton}
             <button
               onClick={() => {
                 localStorage.removeItem('accessToken');
+                localStorage.removeItem('confluenceAccessToken');
                 setRerender(!rerender);
               }}
             >
