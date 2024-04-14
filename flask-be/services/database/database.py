@@ -21,8 +21,8 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 
-from datetime import datetime
 from typing import Optional
+from datamodels import FileConfluenceOutput, RepositoryConfluenceOutput
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -33,7 +33,9 @@ DATABASE_URI = "mongodb+srv://udadmin:QPH4mmr1X3DYdL51@userdocumentation.hqqp2g2
 client = MongoClient(DATABASE_URI, tlsAllowInvalidCertificates=True)
 db = client["user_documentation"]
 collection = db["documentation_store"]
-def get_documentation_by_url(repository_url: str) -> Optional[dict]:
+
+# ALL REPOSITORY LEVEL OPERATIONS
+def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluenceOutput]:
     """
     Retrieves the first document from the MongoDB collection that matches the given repository URL.
 
@@ -41,11 +43,50 @@ def get_documentation_by_url(repository_url: str) -> Optional[dict]:
     - repository_url (str): The URL of the repository to find.
 
     Returns:
-    - dict or None: Returns a dictionary representing the document if found, otherwise None.
+    - dict or None: Returns an object of RepositoryConfluenceOutput representing the document if found, otherwise None.
     """
-    return collection.find_one({"repository_url": repository_url})
+    print(collection.find_one({"repository_url": repository_url}))
+    return RepositoryConfluenceOutput(**collection.find_one({"repository_url": repository_url}))
 
-def get_file_documentation(repository_url: str, file_path) -> Optional[dict]:
+
+
+def put_new_repository_documentation(file_confluence_output: FileConfluenceOutput) -> InsertOneResult:
+    """
+    Inserts a new repository document into the MongoDB collection.
+
+    Parameters:
+    - file_confluence_output (FileConfluenceOutput): The repository data to insert. Use FileConfluenceOutput() from datamodels.py to create it.
+
+    Returns:
+    - InsertOneResult: An instance of InsertOneResult that contains information about the operation
+
+    Raises:
+    - pymongo.errors.OperationFailure: If the insert operation fails due to MongoDB execution issues
+    """
+    return collection.insert_one(file_confluence_output.model_dump())
+
+
+#ALL FILE LEVEL OPERATIONS
+def add_file_to_repository(repository_url: str, file_confluence_output: FileConfluenceOutput) -> UpdateResult:
+    """
+    Adds a file to an existing repository document in MongoDB.
+
+    Parameters:
+    - repository_url: The url of the repository document to update.
+    - file_confluence_output: The file data to add to the repository. Use FileConfluenceOutput() from datamodels.py to create it.
+
+    Returns:
+    - The result of the update operation.
+    """
+    update_query = {"repository_url": repository_url}
+    file_data = {
+        f"files.{file_confluence_output.file_path}": file_confluence_output.model_dump()
+    }
+
+    result = collection.update_one(update_query, {"$set": file_data}, upsert=True)
+    return result
+
+def get_file_documentation(repository_url: str, file_path: str) -> Optional[FileConfluenceOutput]:
     """
     Retrieves the first file documentation from the MongoDB collection that matches the given repository URL and file path.
 
@@ -54,113 +95,43 @@ def get_file_documentation(repository_url: str, file_path) -> Optional[dict]:
     - file_path (str): The file path of the file.
 
     Returns:
-    - dict or None: Returns a dictionary representing the file if found, otherwise None.
+    - FileConfluenceOutput or None: Returns a FileConfluenceOutput object representing the file if found, otherwise None.
     """
-    result = collection.find_one({"repository_url": repository_url})
-
+    result = collection.find_one({"repository_url": repository_url, f"files.{file_path}": {"$exists": True}})
     if result:
-        for file in result.get("files", []):
-            if file["file_path"] == file_path:
-                return file
+        file_data = result.get("files", {}).get(file_path)
+        if file_data:
+            return FileConfluenceOutput(**file_data)
     return None
 
 
-def put_new_documentation(repository_dto: dict) -> InsertOneResult:
-    """
-    Inserts a new repository document into the MongoDB collection.
-
-    Parameters:
-    - repository_dto (dict): Use create_repository_dto to create the DTO
-
-    Returns:
-    - InsertOneResult: An instance of InsertOneResult that contains information about the operation
-
-    Raises:
-    - TypeError: If the input is not a dictionary.
-    - pymongo.errors.OperationFailure: If the insert operation fails due to MongoDB execution issues
-    """
-    return collection.insert_one(repository_dto)
-
-def create_repository_dto(repository_url: str, repository_name: str, repository_summary:str, files: list) -> dict:
-    """
-    Creates a dictionary object representing a repository with its associated files.
-
-    Parameters:
-    - repository_url (str): The URL of the repository.
-    - repository_name (str): The name of the repository.
-    - files (list): A list of file DTOs associated with this repository.
-
-    Returns:
-    - dict: A dictionary object containing repository data.
-    """
-    repository_dto = {
-        "repository_url": repository_url,
-        "repository_name": repository_name,
-        "repository_summary": repository_summary ,
-        "files": files,
-        "created_at": datetime.now(),
-        "last_modified": datetime.now(),
-    }
-    return repository_dto
-
-def create_file_dto(file_name: str, file_path: str, llm_summary: str, user_summary: str = '') -> dict:
-    """
-    Creates a dictionary object representing a file with summaries.
-
-    Parameters:
-    - file_name (str): The name of the file.
-    - file_path (str): The path to the file.
-    - llm_summary (str): The LLM-generated summary of the file.
-    - user_summary (str): An optional user-modified summary of the file, default is an empty string.
-
-    Returns:
-    - dict: A dictionary object containing file data.
-    """
-    file_dto = {
-        "file_path": file_path,
-        "file_name": file_name,
-        "llm_summary": llm_summary,
-        "user_summary": user_summary,
-        "created_at": datetime.now(),
-        "last_modified": datetime.now()
-    }
-    return file_dto
-
-def add_file_to_repository(repository_url: str, file_dto: dict) -> UpdateResult:
-    """
-    Adds a file to an existing repository document in MongoDB.
-
-    Parameters:
-    - repository_id: The ID of the repository document to update.
-    - file_dto: Dictionary containing file data to add. (Use create_file_dto to create it)
-
-    Returns:
-    - The result of the update operation.
-    """
-    result = collection.update_one(
-        {"repository_url": repository_url},
-        {"$push": {"files": file_dto}}
-    )
-    return result
-
-def update_documentation_by_file(repository_url: str, file_path: str, new_data: dict)->UpdateResult:
+def update_documentation_by_file(repository_url: str, file_path: str, new_data: FileConfluenceOutput) -> UpdateResult:
     """
     Updates specific fields of a file within a repository document.
 
     Parameters:
     - repository_url (str): The URL of the repository to update.
     - file_path (str): The path of the file within the repository to update.
-    - new_data (dict): A dictionary of the fields to update.
+    - new_data (FileConfluenceOutput): The updated file data.
 
     Returns:
     - The result of the update operation.
     """
+    # Convert the FileConfluenceOutput object to a dictionary
+    new_data_dict = new_data.model_dump()
+
+    # Construct the update query
+    update_query = {
+        f"files.{file_path}": {k: v for k, v in new_data_dict.items() if k != 'file_path'}
+    }
+
+    # Perform the update operation
     result = collection.update_one(
-        {"repository_url": repository_url, "files.file_path": file_path},
-        {"$set": {f"files.$[elem].{k}": v for k, v in new_data.items()}},
-        array_filters=[{"elem.file_path": file_path}]
+        {"repository_url": repository_url, f"files.{file_path}": {"$exists": True}},
+        {"$set": update_query}
     )
     return result
+
 
 def delete_documentation_by_url(repository_url: str) -> DeleteResult:
     """
@@ -175,40 +146,19 @@ def delete_documentation_by_url(repository_url: str) -> DeleteResult:
     result = collection.delete_one({"repository_url": repository_url})
     return result
 
-def delete_file_from_documentation(repository_url: str, file_path: str) -> UpdateResult:
+def delete_file_from_documentation(repository_url: str, file_key: str) -> UpdateResult:
     """
     Removes a file from a repository document.
 
     Parameters:
     - repository_url (str): The URL of the repository from which to remove the file.
-    - file_path (str): The path of the file to remove.
+    - file_key (str): The key of the file to remove.
 
     Returns:
     - The result of the delete operation.
     """
     result = collection.update_one(
         {"repository_url": repository_url},
-        {"$pull": {"files": {"file_path": file_path}}}
-    )
-    return result
-
-def update_user_summary_by_file(repository_url:str, file_path:str, user_summary:str) -> UpdateResult:
-    """
-    Updates the user-provided summary for a specific file within a repository document in MongoDB.
-
-    Parameters:
-    - repository_url (str): The URL of the repository containing the file.
-    - file_path (str): The path of the file within the repository to update.
-    - user_summary (str): The new user-provided summary to be updated in the file's record.
-
-    Returns:
-    - UpdateResult: An object containing information about the result of the update operation.
-
-    Raises:
-    - Exception: If the update fails due to database connection issues or document schema problems.
-    """
-    result = collection.update_one(
-        {"repository_url": repository_url, "files.file_path": file_path},
-        {"$set": {"files.$.user_summary": user_summary}}
+        {"$unset": {f"files.{file_key}": ""}}
     )
     return result
