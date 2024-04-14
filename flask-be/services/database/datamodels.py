@@ -24,5 +24,5 @@ class RepositoryConfluenceOutput(BaseModel):
     confluence_id : str = Field(description="Confluence ID of the page", default="")
     files: dict[str, FileConfluenceOutput] = Field(description="Files in the repository with their details")
     current_status: str = Field(description="Current status of the repository", default="Not started")
-    created_at: datetime = Field(description="Time when the repository was created")
-    last_modified: datetime = Field(description="Time when the repository was last modified")
+    created_at: datetime = Field(description="Time when the repository was created", default_factory=datetime.now)
+    last_modified: datetime = Field(description="Time when the repository was last modified", default_factory=datetime.now)
