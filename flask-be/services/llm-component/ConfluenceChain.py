@@ -30,43 +30,33 @@ class FileConfluenceOutput(BaseModel):
 prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
-            content="Analyze a Java file to generate structured documentation. The analysis should cover key aspects of the file such as its overall purpose, packages used, and detailed descriptions of functions within the file."
+            content="Analyze the provided file to generate structured documentation. The analysis should cover key aspects of the file such as its overall purpose, packages used, and detailed descriptions of functions within the file."
         ),
         HumanMessagePromptTemplate.from_template(
             """
             ### File Analysis
-            Generate a comprehensive documentation for the provided Java file. This should include:
+            Generate a comprehensive documentation for the provided file. This should include:
 
             1. **Overall Summary**: A general overview of the file's purpose and functionality within its application context.
-            2. **Packages**: Identify and describe the main Java packages utilized in the file, outlining their usage and purpose.
+            2. **Packages**: Identify and describe the main packages utilized in the file, outlining their usage and purpose.
             3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations.
 
-            **Expected Sections**:
-            - **Overall Summary**: Brief description of what the file accomplishes and its role.
-            - **Packages**:
-              - Package Name
-              - Description
-              - Usage
-            - **Function Level**:
-              - Function Name
-              - Description
-              - Class Declaration (if applicable)
-              - Additional Details
-
-            This structured output should help developers understand the key components and functionality of the Java file for development or maintenance purposes.
+            This structured output should help developers understand the key components and functionality of the file for development or maintenance purposes.
             
-            Here is the Java file ({name_of_file}) for reference:
+            Here is the file ({name_of_file}) for reference:
             
-            {java_file}
+            {file}
             
             Follow the following output instructions:
             
             {output_instructions}
+            
+            Note: Make sure to follow the json provided structure very strictly. Do not change the structure of the json output. Do not include or remove any fields from the json output.
             """
         ),
     ]
 )
-# This setup provides a generic framework to analyze any Java file, making it highly versatile for documentation generation purposes. The system message provides the task context, while the human message outlines a detailed template to be filled based on the file's content.
+# This setup provides a generic framework to analyze any  file, making it highly versatile for documentation generation purposes. The system message provides the task context, while the human message outlines a detailed template to be filled based on the file's content.
 
 
 Parser            = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
