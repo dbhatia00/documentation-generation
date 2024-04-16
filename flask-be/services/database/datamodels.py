@@ -14,8 +14,8 @@ class FunctionDetail(BaseModel):
 class FileConfluenceOutput(BaseModel):
     file_path: str = Field(..., description="Path of the file")
     overall_summary: str = Field(description="Overall summary of the file", default="")
-    packages: dict[str, PackageDetail] = Field(description="Packages used in the file with their details", default={})
-    functions: dict[str, FunctionDetail] = Field(description="Functions defined in the file with their details", default={})
+    packages: dict[str, PackageDetail] = Field(description="Packages used in the file with their details")
+    functions: dict[str, FunctionDetail] = Field(description="Functions defined in the file with their details")
 
 class RepositoryConfluenceOutput(BaseModel):
     repository_url: str = Field(..., description="URL of the repository")
