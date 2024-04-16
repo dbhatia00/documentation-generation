@@ -47,10 +47,12 @@ def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluen
     Returns:
     - dict or None: Returns an object of RepositoryConfluenceOutput representing the document if found, otherwise None.
     """
+
     result = collection.find_one({"repository_url": repository_url}, {"_id": 0})
     if result:
         return json_to_respsitory_confluence_output(result)
     return None
+
 
 
 
@@ -106,6 +108,7 @@ def get_file_documentation(repository_url: str, file_path: str) -> Optional[File
         file_data = result.get("files", {}).get(file_path)
         if file_data:
             return json_to_file_confluence_output(file_data)
+
     return None
 
 

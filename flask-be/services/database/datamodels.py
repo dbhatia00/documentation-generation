@@ -51,3 +51,4 @@ def json_to_file_confluence_output(json_data: dict) -> FileConfluenceOutput:
     json_data["packages"] = packages
     json_data["functions"] = functions
     return FileConfluenceOutput(**json_data)
+
