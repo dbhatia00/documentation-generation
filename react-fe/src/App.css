@@ -44,3 +44,20 @@ button {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+.main-theme {
+  background-image: url("images/pen-on-paper.jpg");
+  height: 100vh;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.main-theme h1 {
+
+}
+
+.card-width {
+  width: 10%;
+  height: 10%;
+}
