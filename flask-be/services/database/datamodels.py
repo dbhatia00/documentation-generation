@@ -42,13 +42,18 @@ def json_to_respsitory_confluence_output(json_data: dict) -> RepositoryConfluenc
     return RepositoryConfluenceOutput(**json_data)
 
 def json_to_file_confluence_output(json_data: dict) -> FileConfluenceOutput:
-    packages = json_data.get("packages", {})
-    functions = json_data.get("functions", {})
+    formatted_json = {}
+    file_name = next(iter(json_data.keys()))
+    file = json_data[file_name]
+    formatted_json["file_path"] = file_name
+    packages = file.get("packages", {})
+    functions = file.get("functions", {})
     for package_name, package_data in packages.items():
         packages[package_name] = PackageDetail(**package_data)
     for function_name, function_data in functions.items():
         functions[function_name] = FunctionDetail(**function_data)
-    json_data["packages"] = packages
-    json_data["functions"] = functions
-    return FileConfluenceOutput(**json_data)
+    formatted_json["packages"] = packages
+    formatted_json["functions"] = functions
+    print(formatted_json)
+    return FileConfluenceOutput(**formatted_json)
 
