@@ -21,8 +21,10 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 
+
 from typing import Optional
 from datamodels import FileConfluenceOutput, RepositoryConfluenceOutput
+from datamodels import json_to_respsitory_confluence_output, json_to_file_confluence_output
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -45,12 +47,16 @@ def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluen
     Returns:
     - dict or None: Returns an object of RepositoryConfluenceOutput representing the document if found, otherwise None.
     """
-    result = collection.find_one({"repository_url": repository_url})
-    return result
+
+    result = collection.find_one({"repository_url": repository_url}, {"_id": 0})
+    if result:
+        return json_to_respsitory_confluence_output(result)
+    return None
 
 
 
-def put_new_repository_documentation(file_confluence_output: FileConfluenceOutput) -> InsertOneResult:
+
+def put_new_repository_documentation(repository_confluence_output: RepositoryConfluenceOutput) -> InsertOneResult:
     """
     Inserts a new repository document into the MongoDB collection.
 
@@ -63,7 +69,7 @@ def put_new_repository_documentation(file_confluence_output: FileConfluenceOutpu
     Raises:
     - pymongo.errors.OperationFailure: If the insert operation fails due to MongoDB execution issues
     """
-    return collection.insert_one(file_confluence_output.model_dump())
+    return collection.insert_one(repository_confluence_output.model_dump())
 
 
 #ALL FILE LEVEL OPERATIONS
@@ -97,11 +103,12 @@ def get_file_documentation(repository_url: str, file_path: str) -> Optional[File
     Returns:
     - FileConfluenceOutput or None: Returns a FileConfluenceOutput object representing the file if found, otherwise None.
     """
-    result = collection.find_one({"repository_url": repository_url, f"files.{file_path}": {"$exists": True}})
+    result = collection.find_one({"repository_url": repository_url})
     if result:
         file_data = result.get("files", {}).get(file_path)
         if file_data:
-            return file_data
+            return json_to_file_confluence_output(file_data)
+
     return None
 
 
