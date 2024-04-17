@@ -21,8 +21,9 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 
+
 from typing import Optional
-from datamodels import FileConfluenceOutput, RepositoryConfluenceOutput
+from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -45,14 +46,16 @@ def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluen
     Returns:
     - dict or None: Returns an object of RepositoryConfluenceOutput representing the document if found, otherwise None.
     """
-    result = collection.find_one({"repository_url": repository_url})
+
+    result = collection.find_one({"repository_url": repository_url}, {"_id": 0})
     if result:
-        return RepositoryConfluenceOutput(**result)
+        return database_json_to_respsitory_confluence_output(result)
     return None
 
 
 
-def put_new_repository_documentation(file_confluence_output: FileConfluenceOutput) -> InsertOneResult:
+
+def put_new_repository_documentation(repository_confluence_output: RepositoryConfluenceOutput) -> InsertOneResult:
     """
     Inserts a new repository document into the MongoDB collection.
 
@@ -65,7 +68,7 @@ def put_new_repository_documentation(file_confluence_output: FileConfluenceOutpu
     Raises:
     - pymongo.errors.OperationFailure: If the insert operation fails due to MongoDB execution issues
     """
-    return collection.insert_one(file_confluence_output.model_dump())
+    return collection.insert_one(repository_confluence_output.model_dump())
 
 
 #ALL FILE LEVEL OPERATIONS
@@ -81,11 +84,15 @@ def add_file_to_repository(repository_url: str, file_confluence_output: FileConf
     - The result of the update operation.
     """
     update_query = {"repository_url": repository_url}
+    file_data_key = "files." + file_confluence_output.file_path.replace('.', '_')  # Replace dots with underscores
+    print(file_data_key)
     file_data = {
-        f"files.{file_confluence_output.file_path}": file_confluence_output.model_dump()
+        "$set": {
+            file_data_key: file_confluence_output.model_dump()
+        }
     }
 
-    result = collection.update_one(update_query, {"$set": file_data}, upsert=True)
+    result = collection.update_one(update_query, file_data, upsert=True)
     return result
 
 def get_file_documentation(repository_url: str, file_path: str) -> Optional[FileConfluenceOutput]:
@@ -99,9 +106,9 @@ def get_file_documentation(repository_url: str, file_path: str) -> Optional[File
     Returns:
     - FileConfluenceOutput or None: Returns a FileConfluenceOutput object representing the file if found, otherwise None.
     """
-    result = collection.find_one({"repository_url": repository_url, f"files.{file_path}": {"$exists": True}})
+    result = collection.find_one({"repository_url": repository_url})
     if result:
-        file_data = result.get("files", {}).get(file_path)
+        file_data = result.get("files", {}).get(file_path.replace('.', '_'))
         if file_data:
             return FileConfluenceOutput(**file_data)
     return None
@@ -119,15 +126,11 @@ def update_documentation_by_file(repository_url: str, file_path: str, new_data: 
     Returns:
     - The result of the update operation.
     """
-    # Convert the FileConfluenceOutput object to a dictionary
     new_data_dict = new_data.model_dump()
-
-    # Construct the update query
+    file_path = file_path.replace('.', '_')
     update_query = {
         f"files.{file_path}": {k: v for k, v in new_data_dict.items() if k != 'file_path'}
     }
-
-    # Perform the update operation
     result = collection.update_one(
         {"repository_url": repository_url, f"files.{file_path}": {"$exists": True}},
         {"$set": update_query}
@@ -161,6 +164,6 @@ def delete_file_from_documentation(repository_url: str, file_key: str) -> Update
     """
     result = collection.update_one(
         {"repository_url": repository_url},
-        {"$unset": {f"files.{file_key}": ""}}
+        {"$unset": {f"files.{file_key.replace('.', '_')}": ""}}
     )
     return result
