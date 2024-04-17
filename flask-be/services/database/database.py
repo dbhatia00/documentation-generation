@@ -24,6 +24,7 @@ To use these functions, ensure that the database URI is correctly specified in t
 
 from typing import Optional
 from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
+from datamodels import Status
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -165,5 +166,36 @@ def delete_file_from_documentation(repository_url: str, file_key: str) -> Update
     result = collection.update_one(
         {"repository_url": repository_url},
         {"$unset": {f"files.{file_key.replace('.', '_')}": ""}}
+    )
+    return result
+
+#STATUS OPERATIONS
+def start_llm_generation(repository_url: str) -> InsertOneResult:
+    """
+    Updates the status of the llm generation process to "In progress".
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    status_obj = Status(repository_url=repository_url, status="In progress")
+    result = db["status"].insert_one(status_obj.model_dump())
+    return result
+
+def complete_llm_generation(repository_url: str) -> UpdateResult:
+    """
+    Updates the status of the llm generation process to "Completed".
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = db["status"].update_one(
+        {"repository_url": repository_url},
+        {"$set": {"status": "Completed"}}
     )
     return result
