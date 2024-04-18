@@ -21,9 +21,8 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 
-
 from typing import Optional
-from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
+from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output, external_json_to_respsitory_confluence_output
 from datamodels import Status
 
 from pymongo import MongoClient
@@ -180,7 +179,7 @@ def start_llm_generation(repository_url: str) -> InsertOneResult:
     Returns:
     - The result of the update operation.
     """
-    status_obj = Status(repository_url=repository_url, status="In progress")
+    status_obj = Status(repository_url=repository_url, overall_status="In progress")
     result = db["status"].insert_one(status_obj.model_dump())
     return result
 
@@ -196,6 +195,62 @@ def complete_llm_generation(repository_url: str) -> UpdateResult:
     """
     result = db["status"].update_one(
         {"repository_url": repository_url},
-        {"$set": {"status": "Completed"}}
+        {"$set": {"overall_status": "Completed"}}
     )
+    return result
+
+def start_file_processing(repository_url, file_name):
+    """
+    Updates the status of the file processing to "In progress".
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - file_name (str): The name of the file to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    file_name = file_name.replace('.', '_')
+    if(db["status"].find_one({"repository_url": repository_url}) is None):
+        print("Not found")
+        start_llm_generation(repository_url)
+    # result = db["status"].update_one(
+    #     {"repository_url": repository_url},
+    #     {"$set": {f"file_level_status.{file_name}": "In progress"}})
+    return
+
+def complete_file_processing(repository_url, file_name):
+    """
+    Updates the status of the file processing to "Completed".
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - file_name (str): The name of the file to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    file_name = file_name.replace('.', '_')
+    result = db["status"].update_one(
+        {"repository_url": repository_url},
+        {"$set": {f"file_level_status.{file_name}": "Completed"}}
+    )
+    return result
+
+def get_status(repository_url):
+    """
+    Retrieves the status of the llm generation process for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to find.
+
+    Returns:
+    - dict or None: Returns a dictionary representing the status if found, otherwise None.
+    """
+    result = db["status"].find_one({"repository_url": repository_url}, {"_id": 0})
+    if result:
+        formated_dict = {}
+        for key in result["file_level_status"]:
+            formated_dict[key.replace('_', '.')] = result["file_level_status"][key]
+        result["file_level_status"] = formated_dict
     return result

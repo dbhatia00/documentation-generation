@@ -89,7 +89,8 @@ class Status(BaseModel):
     - status: Status of the llm generation process. Defaults to "Not started" if not provided.
     """
     repository_url: str = Field(..., description="URL of the repository")
-    status: str = Field(description="Status of the llm generation process", default="Not started")
+    overall_status: str = Field(description="Status of the llm generation process", default="Not started")
+    file_level_status: dict[str, str] = Field(description="Status of the llm generation process for each file", default={})
 
 def external_json_to_respsitory_confluence_output(json_data: dict) -> RepositoryConfluenceOutput:
     """
@@ -110,15 +111,10 @@ def external_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     formatted_json["files"] = {}
     files = json_data["files"]
     for file_path, file_data in files.items():
-        file_data["file_path"] = file_path
-        packages = file_data.get("packages", {})
-        functions = file_data.get("functions", {})
-        for package_name, package_data in packages.items():
-            packages[package_name] = PackageDetail(**package_data)
-        for function_name, function_data in functions.items():
-            functions[function_name] = FunctionDetail(**function_data)
-        replacement_file_name = file_path.replace(".", "_")
-        formatted_json["files"][replacement_file_name]= FileConfluenceOutput(**file_data)
+        file_object = external_json_to_file_confluence_output({file_path : file_data})
+        file_path = file_path.replace(".", "_")
+        formatted_json["files"][file_path] = file_object
+    print(formatted_json)
     return RepositoryConfluenceOutput(**formatted_json)
 
 def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOutput:
@@ -135,6 +131,7 @@ def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
     file_name = next(iter(json_data.keys()))
     file = json_data[file_name]
     formatted_json["file_path"] = file_name
+    formatted_json["overall_summary"] = file.get("overall_summary", "")
     packages = file.get("packages", {})
     functions = file.get("functions", {})
     for package_name, package_data in packages.items():
