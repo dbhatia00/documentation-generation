@@ -11,3 +11,4 @@ pydantic
 langchain_openai
 matplotlib
 GitPython
+boto3s

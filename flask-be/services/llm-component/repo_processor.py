@@ -15,6 +15,10 @@ import shutil
 nest_asyncio.apply()
 import ast
 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def process_file(file, repository_url, repo_name):
     output = ConfluenceChain.invoke({
         "file": file.page_content,
@@ -39,19 +43,24 @@ def process_file(file, repository_url, repo_name):
                 files=final_output_db
             )
             put_new_repository_documentation(repository_data)
+    
+    return output
             
 
 def parallel_process_files(files, repo_url, repo_name):
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    data_dict = {}
+    with ThreadPoolExecutor(max_workers=32) as executor:
         # Wrap tqdm around future results for progress bar functionality
         future_to_file = {executor.submit(process_file, file, repo_url, repo_name): file for file in files}
         for future in tqdm(as_completed(future_to_file), total=len(files)):
             file = future_to_file[future]
             try:
                 data = future.result()
+                data_dict[file.metadata['file_path']] = data
             except Exception as exc:
                 print(f'{file.metadata["file_path"]} generated an exception: {exc}')
                 
+    return data_dict
                 
 def download_and_process_repo_url(repo_url, supported_languages = ['python', 'java', 'javascript']):
     repo_name_with_owner  = repo_url.split("github.com/")[1]
@@ -60,6 +69,8 @@ def download_and_process_repo_url(repo_url, supported_languages = ['python', 'ja
     files                 = get_git_files(local_repo_dir, repo_url)
     files                 = get_data_files(files, supported_languages)
     
-    parallel_process_files(files, repo_url, repo_name)
+    data_dict = parallel_process_files(files, repo_url, repo_name)
     
-    return files
+    logger.info(f"Finished processing repository URL: {repo_url}")
+    
+    return data_dict

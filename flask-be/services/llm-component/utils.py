@@ -87,6 +87,12 @@ def get_data_files(files, supported_languages = ['python', 'java', 'javascript']
     temp_str     = " ".join([x.page_content for x in files])
     total_tokens = num_tokens_from_messages([{"message": temp_str}], model="gpt-4-32k-0613") 
     
+    logger.info(f"Total tokens: {total_tokens}")
+    
+    if total_tokens > 1e6:
+        logger.warning(f"Total tokens exceeds 1M. This may result in high costs. Total Tokens: {total_tokens}")
+        raise ValueError("Total tokens exceeds 1M. This may result in high costs.")
+    
     num_per_file = [num_tokens_from_messages([{"message": x.page_content}], model="gpt-4-32k-0613") for x in files]
     num_per_file = pd.Series( num_per_file )
     print(num_per_file.describe())
@@ -103,11 +109,21 @@ def get_data_files(files, supported_languages = ['python', 'java', 'javascript']
 
 # User needs to specify the clone_url, branch, and language of the repository they want to load.
 def get_git_files(repo_path, clone_url, branch="master"):
-    loader = GitLoader(
-        clone_url=clone_url,
-        repo_path=repo_path,
-        branch=branch,
-        # file_filter=lambda file_path: file_path.endswith(".py") #or file_path.endswith(".java") or file_path.endswith(".js"),
-    )
+    loader = None
+    for br in ['master', 'main']:
+        try:
+            loader = GitLoader(
+                clone_url=clone_url,
+                repo_path=repo_path,
+                branch=br,
+                # file_filter=lambda file_path: file_path.endswith(".py") #or file_path.endswith(".java") or file_path.endswith(".js"),
+            )
+        except Exception as e:
+            logger.error(f"Error loading git files: {e}")
+
+    if not loader:
+        logger.error("Error loading git files: Loader not initialized")
+        raise ValueError("Error loading git files: Loader not initialized")
+    
     files = loader.load()
     return files
