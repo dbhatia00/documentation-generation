@@ -71,18 +71,20 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
-def get_data_files(files, language ):
+def get_data_files(files, supported_languages = ['python', 'java', 'javascript']):
     dict_file_ext = {
         'python': '.py',
         'java': '.java',
         'javascript': '.js'
     }    
-    if language not in dict_file_ext.keys():
-        raise ValueError('Language not supported')
-    file_ext = dict_file_ext[language]
-    files = [x for x in files if x.metadata['file_type'] == file_ext and 'tests' not in x.metadata['file_path']]
+    for language in supported_languages:
+        if language not in dict_file_ext.keys():
+            raise ValueError('Language not supported')
+        
+    file_ext_list = [dict_file_ext[x] for x in supported_languages]
+    files = [x for x in files if x.metadata['file_type'] in file_ext_list and 'tests' not in x.metadata['file_path']]
     
-    temp_str = " ".join([x.page_content for x in files])
+    temp_str     = " ".join([x.page_content for x in files])
     total_tokens = num_tokens_from_messages([{"message": temp_str}], model="gpt-4-32k-0613") 
     
     num_per_file = [num_tokens_from_messages([{"message": x.page_content}], model="gpt-4-32k-0613") for x in files]

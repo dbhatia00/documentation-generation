@@ -60,18 +60,17 @@ prompt = ChatPromptTemplate.from_messages(
 
 
 Parser            = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
-model             = ChatOpenAI(model="gpt-4-turbo", temperature=0)
+model             =     AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ) #ChatOpenAI(model="gpt-4-turbo", temperature=0)
 
 
 list_of_fallback_models = [
-    AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ),
     AzureChatOpenAI( deployment_name="gpt-4-east-us2", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_EAST_2'], openai_api_key=os.environ['AZURE_OPENAI_KEY_EAST_2'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-west-us1", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_WEST_1'], openai_api_key=os.environ['AZURE_OPENAI_KEY_WEST_1'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-canada", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_CANADA_EAST'], openai_api_key=os.environ['AZURE_OPENAI_KEY_CANADA_EAST'] ), 
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-aus", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_AUS_EAST'], openai_api_key=os.environ['AZURE_OPENAI_KEY_AUS_EAST'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-south-uk", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_UK_SOUTH'], openai_api_key=os.environ['AZURE_OPENAI_KEY_UK_SOUTH'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-central-swe", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_SWE_CENTRAL'], openai_api_key=os.environ['AZURE_OPENAI_KEY_SWE_CENTRAL'] ),
-    ChatOpenAI(      model="gpt-4-turbo-preview", temperature=0 )
+    # ChatOpenAI(      model="gpt-4-turbo-preview", temperature=0 )
 ]
 
 
