@@ -321,7 +321,7 @@ function App() {
               <div class="col-container">
                     <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigate}>
                       <div class="card-body">
-                        <h5 class="card-title">Project Documentation</h5>
+                        <h5 class="card-title">Documentation Generation</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">Learn more about our project</h6>
                         <p class="card-text">Details details details details details details details details details details details details, details details details details details details details details. details details details details details details details details details details details details details details.</p>
                       </div>  
