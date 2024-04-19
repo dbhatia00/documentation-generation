@@ -17,6 +17,7 @@ Functions:
 """
 from datetime import datetime
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class PackageDetail(BaseModel):
     """
@@ -98,7 +99,8 @@ class RepositoryConfluenceOutput(BaseModel):
     files: dict[str, FileConfluenceOutput] = Field(description="Files in the repository")
     created_at: datetime = Field(description="Time when the repository was created", default_factory=datetime.now)
     last_modified: datetime = Field(description="Time when the repository was last modified", default_factory=datetime.now)
-
+    repo_overview_data: Optional[RepoOverviewOutput] = Field(description="General overview of the repository", default=None)
+    
 class Status(BaseModel):
     """
     Represents the status of a repository's llm generation process.
