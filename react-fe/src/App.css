@@ -46,18 +46,188 @@ button {
 }
 
 .main-theme {
-  background-image: url("images/pen-on-paper.jpg");
+  background-image: url("images/mainbg3.jpg");
   height: 100vh;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
-.main-theme h1 {
 
+.typing-bg::before {
+  content: "|";
+  position: absolute;
+  animation: cursorBlink 0.8s steps(3);
 }
+
+.typing-container {
+  display: inline-block;
+}
+
+.typing-anime {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  -webkit-box-reflect: below 1px linear-gradient(transparent, #3333);
+  width: 0;
+  letter-spacing: 5px;
+  animation: typing;
+  animation-duration: 1s;
+  animation-timing-function: steps(30);
+  animation-fill-mode: forwards;
+}
+
+.mainbg-base {
+  margin-top: 4rem;
+  opacity: 90%;
+  position: relative;
+}
+
+.mainbg-text-title {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.mainbg-text-subtitle {
+  font-size: 2em;
+  margin-bottom: 1rem;
+}
+
+.mainbg-text-content {
+  font-size: 1em;
+  margin-bottom: 1rem;
+}
+
+.opa-anime-one {
+  animation: fadeaway 2s steps(30) 4s forwards;
+}
+
+.opa-anime-two {
+  animation: reveal 1.5s steps(30) 5.5s forwards;
+}
+
+.maintitle {
+  opacity: 0;
+  /* -webkit-box-reflect: below 1px linear-gradient(transparent, #3333); */
+}
+
+@keyframes fadeaway{
+  from {
+    opacity: 90%;
+  }
+  to {
+    opacity: 30%;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.relative-height {
+  text-align: center;
+}
+
+.background-black {
+  background-color: black;
+}
+
+.fixed-height {
+  position: absolute;
+  top: 0;
+  display: inline-block;
+}
+
+.col-container {
+  width: auto;
+  height: auto;
+}
+
+.card-background {
+  position: absolute;
+  top: 0;
+  margin-left: 93px;
+  width: 100%;
+  height: 100%;
+  background-color: #bad5ea;
+  z-index: 1;
+}
+
+.right-card:nth-child(1) {
+  z-index: 2;
+  cursor: pointer;
+  margin-left: 10rem;
+  margin-right: 4rem;
+  left: 50%;
+  right: 0;
+}
+
+.right-card:nth-child(2) {
+  z-index: 2;
+  cursor: pointer;
+  margin-left: 10rem;
+  margin-right: 4rem;
+  top: 15rem;
+  left: 50%;
+  right: 0;
+}
+
+.right-card:nth-child(3) {
+  z-index: 2;
+  cursor: pointer;
+  margin-left: 10rem;
+  margin-right: 4rem;
+  top: 30rem;
+  left: 50%;
+  right: 0;
+}
+
+.test_fontsize1 {
+  font-size: 3rem;
+}
+.test_fontsize2 {
+  font-size: 2rem;
+}
+.test_fontsize3 {
+  font-size: 1rem;
+}
+
+@keyframes typing {
+  from {width: 0;}
+  to {width: 100%;}
+}
+
+@keyframes cursorBlink {
+
+  0%,
+  75% {
+      opacity: 1;
+  }
+
+  76%,
+  100% {
+      opacity: 0;
+  }
+}
+
 
 .card-width {
   width: 10%;
   height: 10%;
+}
+
+
+/* font  */
+
+.noto-sans-main {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
 }

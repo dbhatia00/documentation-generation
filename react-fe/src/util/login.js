@@ -12,7 +12,8 @@ export const loginWithClientId = () => {
 };
 
 export const linkToConfluenceAccount = () => {
-  window.location.assign(
+  // window.location.assign
+  window.open(
     'https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=' +
       clientInfo.confluence_client_id +
       '&scope=write%3Aconfluence-content%20read%3Aconfluence-space.summary%20write%3Aconfluence-space%20write%3Aconfluence-file%20read%3Aconfluence-props%20write%3Aconfluence-props%20manage%3Aconfluence-configuration%20read%3Aconfluence-content.all%20read%3Aconfluence-content.summary%20search%3Aconfluence%20read%3Aconfluence-content.permission%20read%3Aconfluence-user%20read%3Aconfluence-groups%20write%3Aconfluence-groups%20readonly%3Acontent.attachment%3Aconfluence' +
