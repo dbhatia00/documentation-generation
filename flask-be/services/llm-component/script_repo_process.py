@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from utils import load_config, set_environment_variables, num_tokens_from_messages, get_git_files, get_data_files
+from database import complete_llm_generation
 import sys
 import os
 import argparse
@@ -26,9 +27,13 @@ supported_languages = ['python', 'java', 'javascript']
 
 print(f"Processing repository: {args.repo_url}")
 
-# Call the main processing function
-download_and_process_repo_url(args.repo_url, supported_languages)
-
+try:
+    # Call the main processing function
+    download_and_process_repo_url(args.repo_url, supported_languages)
+except Exception as e:
+    print(f"Error processing repository: {args.repo_url}")
+    print(e)
+    complete_llm_generation(args.repo_url, False) 
 
 # docker build --no-cache -t doc-gen-py-app:latest .
 
@@ -38,6 +43,10 @@ download_and_process_repo_url(args.repo_url, supported_languages)
 
 # docker push 018192622412.dkr.ecr.us-east-1.amazonaws.com/doc-gen:latest
 
+# Notes:
+
+# - Add the ability to update status of repo with Failed or Completed
+# - Added get_status_by_file
 
 
 

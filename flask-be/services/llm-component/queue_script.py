@@ -13,7 +13,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-from database import get_documentation_by_url, put_new_repository_documentation, get_file_documentation
+from database import get_documentation_by_url, put_new_repository_documentation, get_file_documentation, complete_llm_generation
 from repo_processor import process_file, parallel_process_files, download_and_process_repo_url
 from langchain_community.document_loaders import GithubFileLoader
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -34,24 +34,33 @@ queue_url              = 'https://sqs.us-east-1.amazonaws.com/018192622412/doc-g
 supported_languages   = ['python', 'java', 'javascript']
 
 
-def handle_message(message_body):
+def handle_message(repo_url):
     # print("Processing repository URL:", message_body)
-    logger.info(f"Processing repository URL: {message_body}")
-    download_and_process_repo_url(message_body, supported_languages)
+    logger.info(f"Processing repository URL: {repo_url}")
+    try:
+        download_and_process_repo_url(repo_url, supported_languages)
+    except Exception as e:
+        logger.error(f"Error processing repository: {repo_url}")
+        logger.error(e)
+        complete_llm_generation(repo_url, False) 
     
 while True:
-    response = sqs.receive_message(
-        QueueUrl=queue_url,
-        MaxNumberOfMessages=1,
-        WaitTimeSeconds=20  # Long polling
-    )
-
-    messages = response.get('Messages', [])
-    for message in messages:
-        handle_message(message['Body'])
-        sqs.delete_message(
+    try:
+        response = sqs.receive_message(
             QueueUrl=queue_url,
-            ReceiptHandle=message['ReceiptHandle']
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=20  # Long polling
         )
+
+        messages = response.get('Messages', [])
+        for message in messages:
+            handle_message(message['Body'])
+            sqs.delete_message(
+                QueueUrl=queue_url,
+                ReceiptHandle=message['ReceiptHandle']
+            )
+    except Exception as e:
+        logger.error(f"Error processing message: {e}")
+        
 
     time.sleep(1)

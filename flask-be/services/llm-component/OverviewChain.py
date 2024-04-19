@@ -22,7 +22,7 @@ class FileConfluenceOutput(BaseModel):
 prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
-            content="Analyze the provided file summaries to generate structured documentation. The analysis should cover key aspects of the repo such as its overall purpose, functionalities, project components, database components, and tech stack."
+            content="Analyze the provided file summaries to generate structured documentation for a github repository. The analysis should cover key aspects of the repo such as its overall purpose, functionalities, project components, database components, and tech stack."
         ),
         HumanMessagePromptTemplate.from_template(
             """
@@ -55,7 +55,7 @@ prompt = ChatPromptTemplate.from_messages(
 
             This structured output should help developers understand the key components and functionality of the file for development or maintenance purposes.
             
-            If no information is provided for any section simple add an empty dictionary. e.g. "functionalities": {}
+            If no information is provided for any section simple add an empty dictionary.
             If overall summary is not provided, add an empty string. e.g. "overall_summary": ""
             
             Here is the repo ({name_of_repo}) for reference:
@@ -74,7 +74,7 @@ prompt = ChatPromptTemplate.from_messages(
 # This setup provides a generic framework to analyze any  file, making it highly versatile for documentation generation purposes. The system message provides the task context, while the human message outlines a detailed template to be filled based on the file's content.
 
 
-Parser            = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
+OverviewParser    = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
 model             = AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ) #ChatOpenAI(model="gpt-4-turbo", temperature=0)
 
 
@@ -89,8 +89,8 @@ list_of_fallback_models = [
 ]
 
 
-ConfluenceChain          = (
+ConfluenceOverviewChain          = (
                       prompt
                     | model.with_fallbacks(list_of_fallback_models)
-                    | Parser
+                    | OverviewParser
                 )

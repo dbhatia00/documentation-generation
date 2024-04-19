@@ -17,7 +17,7 @@ class PackageDetail(BaseModel):
 class FunctionDetail(BaseModel):
     name: str = Field(description="Name of the function")
     description: str = Field(description="Description of what the function does")
-    class_declaration: str = Field(description="Declaration of the class to which the function belongs. Should include everything from class to function.", default="")
+    class_declaration: str = Field(description="Declaration of the class or function to which the function belongs. Should include everything from class (if applicable) to function.", default="")
     additional_details: str = Field(description="Additional information about the function", default="")
 
 
@@ -39,7 +39,7 @@ prompt = ChatPromptTemplate.from_messages(
 
             1. **Overall Summary**: A general overview of the file's purpose and functionality within its application context.
             2. **Packages**: Identify and describe the main packages utilized in the file, outlining their usage and purpose.
-            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations.
+            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations. Additional details about the functions should also be included.
 
             This structured output should help developers understand the key components and functionality of the file for development or maintenance purposes.
             
