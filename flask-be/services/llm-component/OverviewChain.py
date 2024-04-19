@@ -11,7 +11,7 @@ import os
 
 
 
-class FileConfluenceOutput(BaseModel):
+class RepoOverviewOutput(BaseModel):
     overall_summary: str = Field(description="Overall summary of the repo")
     functionalities: dict[str, str] = Field(description="Functionalities of the repo")
     project_components: dict[str, str] = Field(description="Project components of the repo")
@@ -74,7 +74,7 @@ prompt = ChatPromptTemplate.from_messages(
 # This setup provides a generic framework to analyze any  file, making it highly versatile for documentation generation purposes. The system message provides the task context, while the human message outlines a detailed template to be filled based on the file's content.
 
 
-OverviewParser    = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
+OverviewParser    = JsonOutputParser(pydantic_object=RepoOverviewOutput) 
 model             = AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ) #ChatOpenAI(model="gpt-4-turbo", temperature=0)
 
 

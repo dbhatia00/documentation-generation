@@ -1,6 +1,7 @@
 from database import add_file_to_repository, get_documentation_by_url, put_new_repository_documentation, get_file_documentation, start_llm_generation, start_file_processing, complete_file_processing, complete_llm_generation
 from utils import load_config, set_environment_variables, num_tokens_from_messages, get_git_files, get_data_files
 from database import RepositoryConfluenceOutput, external_json_to_file_confluence_output
+from OverviewChain import OverviewParser, ConfluenceOverviewChain
 from langchain_community.document_loaders import GithubFileLoader
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain_community.callbacks import get_openai_callback
@@ -82,8 +83,35 @@ def download_and_process_repo_url(repo_url, supported_languages = ['python', 'ja
     
     data_dict             = parallel_process_files(files, repo_url, repo_name)
     
-    # TODO: Generate a summary of the repository
+    # TODO: Generate a summary of the repository and add it to the database
+
     
     logger.info(f"Finished processing repository URL: {repo_url}")
     
     return data_dict
+
+def get_repo_overview(name_of_repo, repo_data):
+    total_tokens = num_tokens_from_messages([{"message":  str(repo_data)}], model="gpt-4-32k-0613") 
+    logger.info(f"Total tokens for repo overview data: {total_tokens}")
+    
+    res          = ConfluenceOverviewChain.invoke({"name_of_repo": name_of_repo, "repo_data": str(repo_data), "output_instructions": OverviewParser.get_format_instructions()})
+    
+    logger.info(f"Finished generating repo overview for {name_of_repo}")
+    return res
+
+# def process_and_add_repo_overview_to_db(repo_url, repo_data):
+#     repo_overview = get_repo_overview(repo_url, repo_data)
+#     with MongoClient() as client:
+#         existing_doc = get_documentation_by_url(repo_url)
+#         if existing_doc:
+#             existing_doc['overview'] = repo_overview
+#             put_new_repository_documentation(existing_doc)
+#         else:
+#             repository_data = RepositoryConfluenceOutput(
+#                 repository_url=repo_url,
+#                 repository_name=repo_url.split("github.com/")[1].split("/")[1],
+#                 overview=repo_overview
+#             )
+#             put_new_repository_documentation(repository_data)
+            
+#     return repo_overview
