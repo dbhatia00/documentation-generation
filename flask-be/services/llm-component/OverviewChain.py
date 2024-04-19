@@ -10,13 +10,22 @@ import os
 
 
 
-
 class RepoOverviewOutput(BaseModel):
-    overall_summary: str = Field(description="Overall summary of the repo")
-    functionalities: dict[str, str] = Field(description="Functionalities of the repo")
-    project_components: dict[str, str] = Field(description="Project components of the repo")
-    database_components: dict[str, str] = Field(description="Database components of the repo")
-    tech_stack: dict[str, str] = Field(description="Tech stack of the repo")
+    """
+    Represents a general overview of a repository.
+
+    Attributes:
+    - overall_summary: General summary of the repository.
+    - functionalities: Key functionalities provided by the repository.
+    - project_components: Main components of the project.
+    - database_components: Components related to the repository's database.
+    - tech_stack: Technology stack used in the repository.
+    """
+    overall_summary: str = Field(description="General summary of the repository")
+    functionalities: dict[str, str] = Field(description="Key functionalities provided by the repository")
+    project_components: dict[str, str] = Field(description="Main components of the project")
+    database_components: dict[str, str] = Field(description="Components related to the repository's database")
+    tech_stack: dict[str, str] = Field(description="Technology stack used in the repository")
 
 
 prompt = ChatPromptTemplate.from_messages(

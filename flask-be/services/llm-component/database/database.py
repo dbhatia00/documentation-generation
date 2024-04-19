@@ -23,7 +23,7 @@ To use these functions, ensure that the database URI is correctly specified in t
 
 from typing import Optional
 from .datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output, external_json_to_respsitory_confluence_output
-from .datamodels import Status
+from .datamodels import Status, RepoOverviewOutput
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -92,6 +92,21 @@ def add_file_to_repository(repository_url: str, file_confluence_output: FileConf
         }
     }
 
+    result = collection.update_one(update_query, file_data, upsert=True)
+    return result
+
+def add_project_overview_to_repository(repository_url: str, repo_overview_output: RepoOverviewOutput) -> UpdateResult:
+    """
+
+    """
+    update_query = {"repository_url": repository_url}
+    file_data_key = "repo_overview_data"  # Replace dots with underscores
+    print(file_data_key)
+    file_data = {
+        "$set": {
+            file_data_key: repo_overview_output.model_dump()
+        }
+    }
     result = collection.update_one(update_query, file_data, upsert=True)
     return result
 

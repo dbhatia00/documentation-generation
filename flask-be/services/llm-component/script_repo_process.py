@@ -35,22 +35,6 @@ except Exception as e:
     print(e)
     complete_llm_generation(args.repo_url, False) 
 
-# docker build --no-cache -t doc-gen-py-app:latest .
-
-# docker run -p 8080:80 doc-gen-py-app:latest python script_repo_process.py 'https://github.com/Adarsh9616/Electricity_Billing_System/'
-
-# docker tag doc-gen-py-app:latest 018192622412.dkr.ecr.us-east-1.amazonaws.com/doc-gen:latest
-
-# docker push 018192622412.dkr.ecr.us-east-1.amazonaws.com/doc-gen:latest
-
-# Notes:
-
-# - Add the ability to update status of repo with Failed or Completed
-# - Added get_status_by_file
-
-
-
-
 
 
 

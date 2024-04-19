@@ -59,6 +59,25 @@ class FileConfluenceOutput(BaseModel):
     packages: dict[str, PackageDetail] = Field(description="Packages used in the file with their details")
     functions: dict[str, FunctionDetail] = Field(description="Functions defined in the file with their details")
 
+
+class RepoOverviewOutput(BaseModel):
+    """
+    Represents a general overview of a repository.
+
+    Attributes:
+    - overall_summary: General summary of the repository.
+    - functionalities: Key functionalities provided by the repository.
+    - project_components: Main components of the project.
+    - database_components: Components related to the repository's database.
+    - tech_stack: Technology stack used in the repository.
+    """
+    overall_summary: str = Field(description="General summary of the repository")
+    functionalities: dict[str, str] = Field(description="Key functionalities provided by the repository")
+    project_components: dict[str, str] = Field(description="Main components of the project")
+    database_components: dict[str, str] = Field(description="Components related to the repository's database")
+    tech_stack: dict[str, str] = Field(description="Technology stack used in the repository")
+
+
 class RepositoryConfluenceOutput(BaseModel):
     """
     Represents a repository with its files and details.
@@ -199,3 +218,31 @@ def database_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
     formatted_json["functions"] = functions
     print(formatted_json)
     return FileConfluenceOutput(**formatted_json)
+
+
+def external_json_to_repo_overview_output(json_data: dict) -> RepoOverviewOutput:
+    """
+    Converts external JSON data to a RepoOverviewOutput object.
+
+    Parameters:
+    - json_data (dict): External JSON data to convert.
+
+    Returns:
+    - RepoOverviewOutput: Converted object.
+    """
+    # Extracting and formatting the relevant information from the JSON data.
+    overview = json_data.get("overall_summary", "")
+    functionalities = json_data.get("functionalities", {})
+    project_components = json_data.get("project_components", {})
+    database_components = json_data.get("database_components", {})
+    tech_stack = json_data.get("tech_stack", {})
+
+    # Constructing the RepoOverviewOutput with the formatted data.
+    repo_overview = RepoOverviewOutput(
+        overall_summary=overview,
+        functionalities=functionalities,
+        project_components=project_components,
+        database_components=database_components,
+        tech_stack=tech_stack
+    )
+    return repo_overview
