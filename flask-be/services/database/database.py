@@ -20,9 +20,8 @@ Dependencies:
 Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
-
 from typing import Optional
-from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output, external_json_to_respsitory_confluence_output
+from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
 from datamodels import Status
 
 from pymongo import MongoClient
@@ -214,10 +213,10 @@ def start_file_processing(repository_url, file_name):
     if(db["status"].find_one({"repository_url": repository_url}) is None):
         print("Not found")
         start_llm_generation(repository_url)
-    # result = db["status"].update_one(
-    #     {"repository_url": repository_url},
-    #     {"$set": {f"file_level_status.{file_name}": "In progress"}})
-    return
+    result = db["status"].update_one(
+        {"repository_url": repository_url},
+        {"$set": {f"file_level_status.{file_name}": "In progress"}})
+    return result
 
 def complete_file_processing(repository_url, file_name):
     """
@@ -254,3 +253,43 @@ def get_status(repository_url):
             formated_dict[key.replace('_', '.')] = result["file_level_status"][key]
         result["file_level_status"] = formated_dict
     return result
+
+def get_status_by_file(repository_url, file_name):
+    """
+    Retrieves the processing status of a specific file within a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to find.
+    - file_name (str): The name of the file whose status is to be retrieved.
+
+    Returns:
+    - str or None: Returns the status of the file if found, otherwise None.
+    """
+    # Modify the file name to fit the database format.
+    file_name_db = file_name.replace('.', '_')
+
+    # Query the database for the repository's status.
+    repository_status = db["status"].find_one({"repository_url": repository_url}, {"_id": 0, "file_level_status": 1})
+
+    # Check if the repository status exists and the specific file status is available.
+    if repository_status and "file_level_status" in repository_status:
+        file_status = repository_status["file_level_status"].get(file_name_db)
+        if file_status:
+            return file_status
+
+    # Return None if the file status is not found.
+    return None
+
+
+
+def watch_mongodb_stream(repository_url):
+    result = db["status"].find_one({"repository_url": repository_url}, {"_id": 1})
+    print(result)
+    change_stream = db["status"].watch([
+    {"$match": {"operationType": "update", "documentKey._id": result["_id"]}}
+    ])
+    for change in change_stream:
+        print(change)
+        if(change.get("updateDescription").get("updatedFields").get("overall_status") == "Completed"):
+            break
+    return get_documentation_by_url(repository_url)
