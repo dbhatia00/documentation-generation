@@ -10,33 +10,35 @@ auth = HTTPBasicAuth(
 )
 
 
-def handle_file_confluence_page(repo_name, file_name):
+def handle_file_confluence_page(repo_url, file_path):
     """
     Outputs the documentation content to a Confluence page for a given file in a given repo. Creates the Confluence page and writes the page_id to the database if it does not already exist.
 
     TODO: 1. integrate with db/frontend, should be triggered when file status in database becomes "complete" (frontend should be expecting: llm status output & this function's i.e. confluence status output) 2. write page_id to database
 
     Args:
-        repo_name (str): The name of the repository.
-        file_name (str): The name of the file.
+        repo_url (str): The url of the repository.
+        file_path (str): The path of the file in the repository.
 
     Returns:
         bool: True if the page update (and creation) was successful, False otherwise.
     """
-    file_info = confluence.db.get_file_info(repo_name=repo_name, file_name=file_name)
+    file_info = confluence.db.get_file_info(repo_url=repo_url, file_path=file_path)
+    if file_info is None:
+        return False
 
     # check if file already has a corresponding confluence page_id
     # if not, create a new page
     page_id = file_info["page_id"]
     if page_id is None:
-        create_result, page_id = _create_page(file_info=file_info, file_name=file_name)
+        create_result, page_id = _create_page(file_info=file_info, file_path=file_path)
         if create_result is False:
             return False
         # TODO: write page_id to database after successful creation
 
     # insert documentation content into the confluence page
     update_result = _update_page(
-        file_info=file_info, file_name=file_name, page_id=page_id
+        file_info=file_info, file_path=file_path, page_id=page_id
     )
     if update_result is False:
         return False
@@ -44,7 +46,7 @@ def handle_file_confluence_page(repo_name, file_name):
     return True
 
 
-def _create_page(file_info, file_name):
+def _create_page(file_info, file_path):
     """
     Creates a new page in Confluence.
 
@@ -53,7 +55,7 @@ def _create_page(file_info, file_name):
             - space_id (str): The ID of the space where the page will be created.
             - domain (str): The domain of the Confluence instance.
 
-        file_name (str): The name of the file.
+        file_path (str): The path of the file in the repository.
 
     Returns:
         tuple: A tuple containing a boolean value indicating the success of the operation
@@ -61,7 +63,7 @@ def _create_page(file_info, file_name):
         and the ID will be None.
     """
     space_id = file_info["space_id"]
-    title = file_name
+    title = file_path
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
     payload = json.dumps(
         {
@@ -89,7 +91,7 @@ def _create_page(file_info, file_name):
         return True, data["id"]
 
 
-def _update_page(file_info, file_name, page_id):
+def _update_page(file_info, file_path, page_id):
     """
     Updates a Confluence page with the documentation.
 
@@ -97,7 +99,7 @@ def _update_page(file_info, file_name, page_id):
         file_info (dict): A dictionary containing information about the file, pulled from the database.
             - space_id (str): The ID of the space where the page will be created.
             - file_details (dictionary): A dictionary containing the documentation content for the file, see confluence.formatter.get_file_page_body() for more details.
-        file_name (str): The name of the file.
+        file_path (str): The path of the file in the repository.
         page_id (str): The ID of the page to be updated.
 
     Returns:
@@ -118,7 +120,7 @@ def _update_page(file_info, file_name, page_id):
         {
             "id": page_id,
             "status": "current",
-            "title": file_name,
+            "title": file_path,
             "body": {
                 "representation": "atlas_doc_format",
                 "value": json.dumps(file_body),
@@ -168,4 +170,6 @@ def _get_page_version(page_id, domain):
 
 
 # uncomment the following line to test the function
-# handle_file_confluence_page("repo_name", "LastBill.java")
+# handle_file_confluence_page(
+#     "https://github.com/Adarsh9616/Electricity_Billing_System/", "src/LastBill_java"
+# )
