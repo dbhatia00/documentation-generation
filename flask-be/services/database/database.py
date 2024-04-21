@@ -23,7 +23,11 @@ To use these functions, ensure that the database URI is correctly specified in t
 
 
 from typing import Optional
-from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
+from services.database.datamodels import (
+    RepositoryConfluenceOutput,
+    FileConfluenceOutput,
+    database_json_to_respsitory_confluence_output,
+)
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -53,8 +57,6 @@ def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluen
     return None
 
 
-
-
 def put_new_repository_documentation(repository_confluence_output: RepositoryConfluenceOutput) -> InsertOneResult:
     """
     Inserts a new repository document into the MongoDB collection.
@@ -71,7 +73,7 @@ def put_new_repository_documentation(repository_confluence_output: RepositoryCon
     return collection.insert_one(repository_confluence_output.model_dump())
 
 
-#ALL FILE LEVEL OPERATIONS
+# ALL FILE LEVEL OPERATIONS
 def add_file_to_repository(repository_url: str, file_confluence_output: FileConfluenceOutput) -> UpdateResult:
     """
     Adds a file to an existing repository document in MongoDB.
