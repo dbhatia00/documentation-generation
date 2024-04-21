@@ -29,8 +29,11 @@ As far as updating goes, we will integrate Github Actions with our implementatio
 3. pip install flask
 4. pip install python-dotenv
 5. pip install requests
-6. cd flask-be
-7. flask run
+6. pip install pymongo
+7. pip install pydantic
+8. cd flask-be
+9. export PYTHONPATH="{path to repo}/documentation-generation/flask-be:$PYTHONPATH"
+10. flask run
 
 The backend should now be running
 
