@@ -6,6 +6,7 @@ import base64
 import json
 import services.confluence.api
 
+from services.database.database import watch_mongodb_stream, start_llm_generation
 app = Flask(__name__)
 
 '''
@@ -27,20 +28,21 @@ def get_doc():
         # Return an error response if the URL is missing
         return jsonify({'error': 'Please provide a GitHub repository URL'}), 400
 
-    # Dummy content for the new file
-    doc_content = "#This is a placeholder for the generated documentation"
-
     api_url = f'https://api.github.com/repos/{repo_url}/contents/'
     response = requests.get(api_url)
 
     if response.status_code != 200:
         return jsonify({'error': 'Failed to fetch source code from GitHub'}), 500
+    
+    repo_url = "https://github.com/" + repo_url
+    url_to_process_repo = f"https://bjxdbdicckttmzhrhnpl342k2q0pcthx.lambda-url.us-east-1.on.aws/?repo_url={repo_url}"
+    #LLM should not start put the repo in the status database. It might cause sync issues since we start listening straight away
+    start_llm_generation(repo_url)
+    requests.get(url_to_process_repo)
 
-    source_code_files = response.json()
-    ## TODO: Implement generation logic HERE. source_code_files now contains all of the repo's contents.
-
-    # Return the dummy content as a JSON response
-    return jsonify({'doc_content': doc_content})
+    database_response = watch_mongodb_stream(repo_url)
+    
+    return jsonify({'doc_content': database_response.model_dump()})
 
 
 '''
