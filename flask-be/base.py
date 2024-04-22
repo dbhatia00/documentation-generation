@@ -197,15 +197,13 @@ def retrieve_client_info():
 
 
 """
-    DESCRIPTION -   A function to handle the get_doc button click
-    INPUTS -        Repository URL
-    OUTPUTS -       Repository doc or error
+    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
+    INPUTS -        Repository URL, confluence domain, email, api token
+    OUTPUTS -       Message of success or error
     NOTES -         Outward facing (called from the Frontend)
 """
-
-
-@app.route("/api/update_confluence", methods=["POST"])
-def update_confluence():
+@app.route("/api/create_confluence", methods=["POST"])
+def create_confluence():
     # Extract data from the request
     data = request.get_json()
     confluence_domain = data.get("confluence_domain")
