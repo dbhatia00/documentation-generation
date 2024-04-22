@@ -3,9 +3,11 @@ import hmac
 import os
 import dotenv
 from flask import Flask, abort, jsonify, request
+from requests.auth import HTTPBasicAuth
 import requests
 import base64
 import json
+import services.confluence.api
 import logging
 
 
@@ -227,9 +229,22 @@ def get_access_token():
                 500,
             )
 
+            return (
+                jsonify(
+                    {
+                        "error": f"Failed to fetch access token: {access_token_response.text}"
+                    }
+                ),
+                500,
+            )
+
     except Exception as e:
         # Return an error response if an exception occurs
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+def retrieve_client_info():
+    return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
 def retrieve_client_info():
@@ -239,6 +254,82 @@ def retrieve_client_info():
     client_id = str(tokens.get("client_id"))
     client_secret = str(tokens.get("client_secret"))
     return client_id, client_secret
+
+
+"""
+    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
+    INPUTS -        Repository URL, confluence domain, email, api token
+    OUTPUTS -       Message of success or error
+    NOTES -         Outward facing (called from the Frontend)
+"""
+
+
+@app.route("/api/create_confluence", methods=["POST"])
+def create_confluence():
+    # Extract data from the request
+    data = request.get_json()
+    confluence_domain = data.get("confluence_domain")
+    repo_url = data.get("repo_url")
+    email = data.get("email")
+    api_token = data.get("api_token")
+
+    # Check if the required data is provided
+    if not confluence_domain or not repo_url or not email or not api_token:
+        # Return an error response if any of the required data is missing
+        return jsonify({"error": "Please provide all variables"}), 400
+
+    auth = HTTPBasicAuth(email, api_token)
+
+    success = services.confluence.api.handle_repo_confluence_pages(
+        repo_url=repo_url,
+        domain=confluence_domain,
+        space_id=None,
+        auth=auth,
+    )
+
+    if not success:
+        # Return an error response if the update fails
+        return jsonify({"error": "Failed to update Confluence pages"}), 500
+    else:
+        return jsonify({"success": "Confluence pages updated successfully"}), 200
+
+
+"""
+    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
+    INPUTS -        Repository URL, confluence domain, email, api token
+    OUTPUTS -       Message of success or error
+    NOTES -         Outward facing (called from the Frontend)
+"""
+
+
+@app.route("/api/create_confluence", methods=["POST"])
+def create_confluence():
+    # Extract data from the request
+    data = request.get_json()
+    confluence_domain = data.get("confluence_domain")
+    repo_url = data.get("repo_url")
+    email = data.get("email")
+    api_token = data.get("api_token")
+
+    # Check if the required data is provided
+    if not confluence_domain or not repo_url or not email or not api_token:
+        # Return an error response if any of the required data is missing
+        return jsonify({"error": "Please provide all variables"}), 400
+
+    auth = HTTPBasicAuth(email, api_token)
+
+    success = services.confluence.api.handle_repo_confluence_pages(
+        repo_url=repo_url,
+        domain=confluence_domain,
+        space_id=None,
+        auth=auth,
+    )
+
+    if not success:
+        # Return an error response if the update fails
+        return jsonify({"error": "Failed to update Confluence pages"}), 500
+    else:
+        return jsonify({"success": "Confluence pages updated successfully"}), 200
 
 
 # Your webhook secret, which you must set both here and in your GitHub webhook settings
