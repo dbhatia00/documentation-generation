@@ -1,14 +1,8 @@
 import services.confluence.db
 import services.confluence.formatter
-from requests.auth import HTTPBasicAuth
 import requests
 import json
 import urllib.parse
-
-auth = HTTPBasicAuth(
-    "YOUR_EMAIL",
-    "YOUR_API_TOKEN",
-)
 
 
 def get_space_id_and_domain_from_confluence_url(confluence_url):
@@ -66,15 +60,101 @@ def _get_space_id_from_space_key(space_key, domain):
         return None
 
 
-def handle_file_confluence_page(repo_url, file_path):
+def handle_repo_confluence_pages(repo_url, domain, space_id, auth):
+    """
+    Outputs the documentation content to Confluence pages for all files in a given repo. If space_id is not given, a new space will be created. See handle_file_confluence_page() for more details.
+
+    Args:
+        repo_url (str): The url of the repository.
+        domain (str): The domain of the Confluence instance.
+        space_id (str): The ID of the space where the pages will be created.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+
+    Returns:
+        bool: True if all pages were successfully updated, False otherwise.
+    """
+    repo_info = services.confluence.db.get_repo_info(repo_url=repo_url)
+    if repo_info is None:
+        return False
+
+    # create new space if space_id is not given
+    if space_id is None:
+        space_key, space_id = _create_space(
+            domain=domain, auth=auth, repo_name=repo_info["repo_name"]
+        )
+        # unsuccessful space creation
+        if space_key is None or space_id is None:
+            return False
+
+    # create a new page or update an existing page for each file in the repo
+    for file_info in repo_info["file_info_list"]:
+        file_path = file_info["file_path"]
+        handle_file_confluence_page(
+            repo_url=repo_url,
+            file_path=file_path,
+            domain=domain,
+            space_id=space_id,
+            auth=auth,
+        )
+
+    # TODO: create page for repo level documentation
+
+    # TODO: ideally, confluence page hierarchy should reflect structure of directories in repo - need corresponding structures in LLM output
+
+    return True
+
+
+def _create_space(domain, auth, repo_name):
+    """
+    Creates a new space in Confluence.
+
+    Args:
+        domain (str): The domain of the Confluence instance.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        repo_name (str): The name of the repository.
+
+    Returns:
+        str: a tuple containing the space key and space id of the created space. If the operation fails, returns None.
+    """
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+
+    payload = json.dumps(
+        {
+            "name": repo_name + ": Auto Generated Documentation",
+            # "key": "".join([char for char in repo_name if char.isalnum()]),
+            "key": "docgen",
+        }
+    )
+
+    url = f"https://{domain}/wiki/rest/api/space"
+    response = requests.request("POST", url, data=payload, headers=headers, auth=auth)
+
+    print(
+        "_CREATE_SPACE:\n",
+        json.dumps(
+            json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")
+        ),
+    )
+
+    if response.status_code != 200:
+        return None, None
+    else:
+        data = response.json()
+        return data["key"], data["id"]
+
+
+def handle_file_confluence_page(repo_url, file_path, domain, space_id, auth):
     """
     Outputs the documentation content to a Confluence page for a given file in a given repo. Creates the Confluence page and writes the page_id to the database if it does not already exist.
 
-    TODO: 1. integrate with db/frontend, should be triggered when file status in database becomes "complete" (frontend should be expecting: llm status output & this function's i.e. confluence status output) 2. write page_id to database
+    TODO: 1. integrate with triggers: should be triggered after status of page becomes "complete" in db 2. write page_id to database
 
     Args:
         repo_url (str): The url of the repository.
         file_path (str): The path of the file in the repository.
+        domain (str): The domain of the Confluence instance.
+        space_id (str): The ID of the space where the page will be created.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
 
     Returns:
         bool: True if the page update (and creation) was successful, False otherwise.
@@ -85,18 +165,23 @@ def handle_file_confluence_page(repo_url, file_path):
     if file_info is None:
         return False
 
+    file_info["space_id"] = space_id
+    file_info["domain"] = domain
+
     # check if file already has a corresponding confluence page_id
     # if not, create a new page
     page_id = file_info["page_id"]
     if page_id is None:
-        create_result, page_id = _create_page(file_info=file_info, file_path=file_path)
+        create_result, page_id = _create_page(
+            file_info=file_info, file_path=file_path, auth=auth
+        )
         if create_result is False:
             return False
         # TODO: write page_id to database after successful creation
 
     # insert documentation content into the confluence page
     update_result = _update_page(
-        file_info=file_info, file_path=file_path, page_id=page_id
+        file_info=file_info, file_path=file_path, page_id=page_id, auth=auth
     )
     if update_result is False:
         return False
@@ -104,7 +189,7 @@ def handle_file_confluence_page(repo_url, file_path):
     return True
 
 
-def _create_page(file_info, file_path):
+def _create_page(file_info, file_path, auth):
     """
     Creates a new page in Confluence.
 
@@ -114,6 +199,7 @@ def _create_page(file_info, file_path):
             - domain (str): The domain of the Confluence instance.
 
         file_path (str): The path of the file in the repository.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
 
     Returns:
         tuple: A tuple containing a boolean value indicating the success of the operation
@@ -149,7 +235,7 @@ def _create_page(file_info, file_path):
         return True, data["id"]
 
 
-def _update_page(file_info, file_path, page_id):
+def _update_page(file_info, file_path, page_id, auth):
     """
     Updates a Confluence page with the documentation.
 
@@ -159,6 +245,7 @@ def _update_page(file_info, file_path, page_id):
             - file_details (dictionary): A dictionary containing the documentation content for the file, see services.confluence.formatter.get_file_page_body() for more details.
         file_path (str): The path of the file in the repository.
         page_id (str): The ID of the page to be updated.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
 
     Returns:
         bool: True if the page was successfully updated, False otherwise.
@@ -166,7 +253,9 @@ def _update_page(file_info, file_path, page_id):
     domain = file_info["domain"]
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
 
-    get_page_result, version_number = _get_page_version(page_id=page_id, domain=domain)
+    get_page_result, version_number = _get_page_version(
+        page_id=page_id, domain=domain, auth=auth
+    )
     if get_page_result is False:
         return False
 
@@ -203,13 +292,14 @@ def _update_page(file_info, file_path, page_id):
         return True
 
 
-def _get_page_version(page_id, domain):
+def _get_page_version(page_id, domain, auth):
     """
     Retrieves the version number of a Confluence page.
 
     Args:
         page_id (str): The ID of the page.
         domain (str): The domain of the Confluence site.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
 
     Returns:
         tuple: A tuple containing a boolean value indicating the success of the request
@@ -225,9 +315,3 @@ def _get_page_version(page_id, domain):
     else:
         data = response.json()
         return True, data["version"]["number"]
-
-
-# uncomment the following line to test the function
-# handle_file_confluence_page(
-#     "https://github.com/Adarsh9616/Electricity_Billing_System/", "src/LastBill_java"
-# )
