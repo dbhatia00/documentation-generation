@@ -54,6 +54,7 @@ function App() {
   // Button to handle the github URL and fetch the doc
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setOutput('Generating Content...')
     try {
       // Sends the repo URL to the backend
       const response = await fetch("/api/get_doc", {

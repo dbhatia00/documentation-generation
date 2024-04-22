@@ -9,6 +9,8 @@ import json
 import logging
 
 
+from services.database.database import watch_mongodb_stream, start_llm_generation
+
 app = Flask(__name__)
 dotenv.load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +50,17 @@ def get_doc():
 
     # Return the dummy content as a JSON response
     return jsonify({"doc_content": doc_content})
+        return jsonify({'error': 'Failed to fetch source code from GitHub'}), 500
+    
+    repo_url = "https://github.com/" + repo_url
+    url_to_process_repo = f"https://bjxdbdicckttmzhrhnpl342k2q0pcthx.lambda-url.us-east-1.on.aws/?repo_url={repo_url}"
+    #LLM should not start put the repo in the status database. It might cause sync issues since we start listening straight away
+    start_llm_generation(repo_url)
+    requests.get(url_to_process_repo)
+
+    database_response = watch_mongodb_stream(repo_url)
+    
+    return jsonify({'doc_content': database_response.model_dump()})
 
 
 """

@@ -20,9 +20,10 @@ Dependencies:
 Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
+
 from typing import Optional
-from datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output
-from datamodels import Status
+from .datamodels import RepositoryConfluenceOutput, FileConfluenceOutput, database_json_to_respsitory_confluence_output, external_json_to_respsitory_confluence_output
+from .datamodels import Status, RepoOverviewOutput
 
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
@@ -91,6 +92,21 @@ def add_file_to_repository(repository_url: str, file_confluence_output: FileConf
         }
     }
 
+    result = collection.update_one(update_query, file_data, upsert=True)
+    return result
+
+def add_project_overview_to_repository(repository_url: str, repo_overview_output: RepoOverviewOutput) -> UpdateResult:
+    """
+
+    """
+    update_query = {"repository_url": repository_url}
+    file_data_key = "repo_overview_data"  # Replace dots with underscores
+    print(file_data_key)
+    file_data = {
+        "$set": {
+            file_data_key: repo_overview_output.model_dump()
+        }
+    }
     result = collection.update_one(update_query, file_data, upsert=True)
     return result
 
@@ -182,7 +198,7 @@ def start_llm_generation(repository_url: str) -> InsertOneResult:
     result = db["status"].insert_one(status_obj.model_dump())
     return result
 
-def complete_llm_generation(repository_url: str) -> UpdateResult:
+def complete_llm_generation(repository_url: str, success: bool=True) -> UpdateResult:
     """
     Updates the status of the llm generation process to "Completed".
 
@@ -192,9 +208,13 @@ def complete_llm_generation(repository_url: str) -> UpdateResult:
     Returns:
     - The result of the update operation.
     """
+    str_complete = "Completed"
+    if not success:
+        str_complete = "Failed"
+        
     result = db["status"].update_one(
         {"repository_url": repository_url},
-        {"$set": {"overall_status": "Completed"}}
+        {"$set": {"overall_status": str_complete}}
     )
     return result
 
@@ -213,12 +233,12 @@ def start_file_processing(repository_url, file_name):
     if(db["status"].find_one({"repository_url": repository_url}) is None):
         print("Not found")
         start_llm_generation(repository_url)
-    result = db["status"].update_one(
-        {"repository_url": repository_url},
-        {"$set": {f"file_level_status.{file_name}": "In progress"}})
-    return result
+    # result = db["status"].update_one(
+    #     {"repository_url": repository_url},
+    #     {"$set": {f"file_level_status.{file_name}": "In progress"}})
+    return
 
-def complete_file_processing(repository_url, file_name):
+def complete_file_processing(repository_url, file_name, success=True):
     """
     Updates the status of the file processing to "Completed".
 
@@ -229,10 +249,13 @@ def complete_file_processing(repository_url, file_name):
     Returns:
     - The result of the update operation.
     """
+    str_complete = "Completed"
+    if not success:
+        str_complete = "Failed"
     file_name = file_name.replace('.', '_')
     result = db["status"].update_one(
         {"repository_url": repository_url},
-        {"$set": {f"file_level_status.{file_name}": "Completed"}}
+        {"$set": {f"file_level_status.{file_name}": str_complete}}
     )
     return result
 
@@ -279,17 +302,3 @@ def get_status_by_file(repository_url, file_name):
 
     # Return None if the file status is not found.
     return None
-
-
-
-def watch_mongodb_stream(repository_url):
-    result = db["status"].find_one({"repository_url": repository_url}, {"_id": 1})
-    print(result)
-    change_stream = db["status"].watch([
-    {"$match": {"operationType": "update", "documentKey._id": result["_id"]}}
-    ])
-    for change in change_stream:
-        print(change)
-        if(change.get("updateDescription").get("updatedFields").get("overall_status") == "Completed"):
-            break
-    return get_documentation_by_url(repository_url)
