@@ -22,6 +22,7 @@ def handle_repo_confluence_pages(repo_url, domain, space_id, auth):
 
     # create new space if space_id is not given
     if space_id is None:
+        # TODO: construct space URL from space_key and return to front-end
         space_key, space_id = _create_space(
             domain=domain, auth=auth, repo_name=repo_info["repo_name"]
         )
@@ -29,18 +30,29 @@ def handle_repo_confluence_pages(repo_url, domain, space_id, auth):
         if space_key is None or space_id is None:
             return False
 
+    # TODO: replace with or add a function that creates/updates repo level summary pages
+    # update the home page of the space with the repo summary
+    success = update_home_page(
+        domain=domain,
+        auth=auth,
+        space_id=space_id,
+        repo_summary=repo_info["repo_summary"],
+    )
+    if success is False:
+        return False
+
     # create a new page or update an existing page for each file in the repo
     for file_info in repo_info["file_info_list"]:
         file_path = file_info["file_path"]
-        handle_file_confluence_page(
+        success = handle_file_confluence_page(
             repo_url=repo_url,
             file_path=file_path,
             domain=domain,
             space_id=space_id,
             auth=auth,
         )
-
-    # TODO: create page for repo level documentation
+        if success is False:
+            return False
 
     # TODO: ideally, confluence page hierarchy should reflect structure of directories in repo - need corresponding structures in LLM output
 
@@ -64,8 +76,7 @@ def _create_space(domain, auth, repo_name):
     payload = json.dumps(
         {
             "name": repo_name + ": Auto Generated Documentation",
-            # "key": "".join([char for char in repo_name if char.isalnum()]),
-            "key": "docgen",
+            "key": "".join([char for char in repo_name if char.isalnum()]) + "Doc",
         }
     )
 
@@ -83,7 +94,72 @@ def _create_space(domain, auth, repo_name):
         return None, None
     else:
         data = response.json()
-        return data["key"], data["id"]
+        return data["key"], str(data["id"])
+
+
+def update_home_page(domain, auth, space_id, repo_summary):
+    """
+    Updates the home page for the space with space_id with the repo_summary provided.
+
+    Args:
+        domain (str): The domain of the Confluence instance.
+        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        repo_summary (str): A str containing the summary information for the repository.
+
+    Returns:
+        bool: True if the home page was successfully updated, False otherwise.
+    """
+    # TODO: store repo home page info in db, and get home page ID from db instead of from confluence API
+    # getting home page ID
+    headers = {"Accept": "application/json"}
+    url = f"https://{domain}/wiki/api/v2/spaces"
+    response = requests.request("GET", url, headers=headers, auth=auth)
+
+    if response.status_code != 200:
+        return False
+    else:
+        data = response.json()
+        homepage_id = None
+        for space in data["results"]:
+            if space["id"] == space_id:
+                homepage_id = space["homepageId"]
+        if homepage_id is None:
+            print("confluence.api.update_home_page: homepage_id is None")
+            return False
+
+    # add repo_summary to the home page
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    get_page_result, version_number = _get_page_version(
+        page_id=homepage_id, domain=domain, auth=auth
+    )
+    if get_page_result is False:
+        return False
+    payload = json.dumps(
+        {
+            "id": homepage_id,
+            "status": "current",
+            "title": "Repo Summary",
+            "body": {
+                "representation": "storage",
+                "value": repo_summary,
+            },
+            "version": {"number": version_number + 1},
+        }
+    )
+    url = f"https://{domain}/wiki/api/v2/pages/{homepage_id}"
+    response = requests.request("PUT", url, data=payload, headers=headers, auth=auth)
+
+    print(
+        "UPDATE_HOME_PAGE:\n",
+        json.dumps(
+            json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")
+        ),
+    )
+
+    if response.status_code != 200:
+        return False
+    else:
+        return True
 
 
 def handle_file_confluence_page(repo_url, file_path, domain, space_id, auth):
@@ -108,6 +184,7 @@ def handle_file_confluence_page(repo_url, file_path, domain, space_id, auth):
     if file_info is None:
         return False
 
+    # TODO: get space_id and domain from db instead of passing down from handle_repo_confluence_pages
     file_info["space_id"] = space_id
     file_info["domain"] = domain
 
