@@ -59,6 +59,7 @@ class FileConfluenceOutput(BaseModel):
     overall_summary: str = Field(description="Overall summary of the file", default="")
     packages: dict[str, PackageDetail] = Field(description="Packages used in the file with their details")
     functions: dict[str, FunctionDetail] = Field(description="Functions defined in the file with their details")
+    confluence_page_id: str = Field(description="Confluence page ID of the file", default="")
 
 class RepoOverviewOutput(BaseModel):
     """
@@ -93,7 +94,8 @@ class RepositoryConfluenceOutput(BaseModel):
     repository_url: str = Field(..., description="URL of the repository")
     repository_name: str = Field(..., description="Name of the repository")
     repository_summary: str = Field(description="Summary of the repository", default="")
-    confluence_id : str = Field(description="Confluence ID of the page", default="")
+    confluence_domain: str = Field(description="Confluence domain of the page", default="")
+    confluence_space_id : str = Field(description="Confluence ID of the page", default="")
     files: dict[str, FileConfluenceOutput] = Field(description="Files in the repository")
     repo_overview_data: Optional[RepoOverviewOutput] = Field(description="General overview of the repository", default=None)
     created_at: datetime = Field(description="Time when the repository was created", default_factory=datetime.now)
@@ -126,7 +128,8 @@ def external_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     formatted_json["repository_url"] = json_data["repository_url"]
     formatted_json["repository_name"] = json_data["repository_name"]
     formatted_json["repository_summary"] = json_data.get("repository_summary", "")
-    formatted_json["confluence_id"] = json_data.get("confluence_id", "")
+    formatted_json["confluence_space_id"] = json_data.get("confluence_space_id", "")
+    formatted_json["confluence_domain"] = json_data.get("confluence_domain", "")
     formatted_json["repo_overview_data"] = RepoOverviewOutput(**json_data.get("repo_overview_data", {}))
     formatted_json["files"] = {}
     files = json_data["files"]
@@ -152,6 +155,7 @@ def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
     file = json_data[file_name]
     formatted_json["file_path"] = file_name
     formatted_json["overall_summary"] = file.get("overall_summary", "")
+    formatted_json["confluence_page_id"] = file.get("confluence_page_id", "")
     packages = file.get("packages", {})
     functions = file.get("functions", {})
     for package_name, package_data in packages.items():
@@ -178,7 +182,8 @@ def database_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     formatted_json["repository_url"] = json_data["repository_url"]
     formatted_json["repository_name"] = json_data["repository_name"]
     formatted_json["repository_summary"] = json_data.get("repository_summary", "")
-    formatted_json["confluence_id"] = json_data.get("confluence_id", "")
+    formatted_json["confluence_space_id"] = json_data.get("confluence_id", "")
+    formatted_json["confluence_domain"] = json_data.get("confluence_domain", "")
     formatted_json["repo_overview_data"] = RepoOverviewOutput(**json_data.get("repo_overview_data", {}))
     formatted_json["files"] = {}
     files = json_data["files"]
@@ -210,6 +215,8 @@ def database_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
     file_name = next(iter(json_data.keys()))
     file = json_data[file_name]
     formatted_json["file_path"] = file_name
+    formatted_json["overall_summary"] = file.get("overall_summary", "")
+    formatted_json["confluence_page_id"] = file.get("confluence_page_id", "")
     packages = file.get("packages", {})
     functions = file.get("functions", {})
     for package_name, package_data in packages.items():
