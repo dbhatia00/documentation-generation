@@ -4,4 +4,3 @@ flask-be/token_server.json
 react-fe/src/token_client.json
 **.yaml
 **example_data**
-**pycache**
