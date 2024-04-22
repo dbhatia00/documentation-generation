@@ -3,11 +3,67 @@ import services.confluence.formatter
 from requests.auth import HTTPBasicAuth
 import requests
 import json
+import urllib.parse
 
 auth = HTTPBasicAuth(
     "YOUR_EMAIL",
     "YOUR_API_TOKEN",
 )
+
+
+def get_space_id_and_domain_from_confluence_url(confluence_url):
+    """
+    Extracts the space_id and domain from a Confluence URL.
+
+    Args:
+        confluence_url (str): The URL of the Confluence page.
+
+    Returns:
+        tuple: A tuple containing a boolean value indicating the success of the operation, the domain (str) and the space_id (str). If any operation fails, the boolean value will be False and the domain and space_id will be None.
+    """
+    # extract domain
+    try:
+        domain = urllib.parse.urlparse(confluence_url).netloc
+    except ValueError:
+        return False, None, None
+    # extract space_id
+    try:
+        path = urllib.parse.urlparse(confluence_url).path
+        space_key = path.split("/")[3]
+    except (ValueError, IndexError):
+        return False, None, None
+    space_id = _get_space_id_from_space_key(space_key=space_key, domain=domain)
+
+    if space_id is None:
+        return False, None, None
+
+    return True, domain, space_id
+
+
+def _get_space_id_from_space_key(space_key, domain):
+    """
+    Retrieves the space_id of a Confluence space from the space key, via the Confluence Get Spaces endpoint (https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-space/#api-spaces-get).
+
+    Args:
+        space_key (str): The space key of the space.
+        domain (str): The domain of the Confluence site.
+
+    Returns:
+        str: The ID of the space matching the space key. If no space with space_key is found, returns None.
+    """
+    headers = {"Accept": "application/json"}
+
+    url = f"https://{domain}/wiki/api/v2/spaces"
+    response = requests.request("GET", url, headers=headers, auth=auth)
+
+    if response.status_code != 200:
+        return None
+    else:
+        data = response.json()
+        for space in data["results"]:
+            if space["key"] == space_key:
+                return space["id"]
+        return None
 
 
 def handle_file_confluence_page(repo_url, file_path):
