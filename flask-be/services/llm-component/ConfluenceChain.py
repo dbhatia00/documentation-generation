@@ -17,7 +17,7 @@ class PackageDetail(BaseModel):
 class FunctionDetail(BaseModel):
     name: str = Field(description="Name of the function")
     description: str = Field(description="Description of what the function does")
-    class_declaration: str = Field(description="Declaration of the class or function to which the function belongs. Should include everything from class (if applicable) to function.", default="")
+    class_declaration: str = Field(description="Declaration of the class to which the function belongs. Should include everything from class to function.", default="")
     additional_details: str = Field(description="Additional information about the function", default="")
 
 
@@ -39,7 +39,7 @@ prompt = ChatPromptTemplate.from_messages(
 
             1. **Overall Summary**: A general overview of the file's purpose and functionality within its application context.
             2. **Packages**: Identify and describe the main packages utilized in the file, outlining their usage and purpose.
-            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations. Additional details about the functions should also be included.
+            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations.
 
             This structured output should help developers understand the key components and functionality of the file for development or maintenance purposes.
             
@@ -60,17 +60,18 @@ prompt = ChatPromptTemplate.from_messages(
 
 
 Parser            = JsonOutputParser(pydantic_object=FileConfluenceOutput) 
-model             =     AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ) #ChatOpenAI(model="gpt-4-turbo", temperature=0)
+model             = ChatOpenAI(model="gpt-4-turbo", temperature=0)
 
 
 list_of_fallback_models = [
+    AzureChatOpenAI( deployment_name="gpt4-preview", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'], openai_api_key=os.environ['AZURE_OPENAI_KEY'] ),
     AzureChatOpenAI( deployment_name="gpt-4-east-us2", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_EAST_2'], openai_api_key=os.environ['AZURE_OPENAI_KEY_EAST_2'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-west-us1", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_WEST_1'], openai_api_key=os.environ['AZURE_OPENAI_KEY_WEST_1'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-canada", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_CANADA_EAST'], openai_api_key=os.environ['AZURE_OPENAI_KEY_CANADA_EAST'] ), 
     AzureChatOpenAI( deployment_name="gpt-4-turbo-east-aus", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_AUS_EAST'], openai_api_key=os.environ['AZURE_OPENAI_KEY_AUS_EAST'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-south-uk", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_UK_SOUTH'], openai_api_key=os.environ['AZURE_OPENAI_KEY_UK_SOUTH'] ),
     AzureChatOpenAI( deployment_name="gpt-4-turbo-central-swe", temperature=0, azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT_SWE_CENTRAL'], openai_api_key=os.environ['AZURE_OPENAI_KEY_SWE_CENTRAL'] ),
-    # ChatOpenAI(      model="gpt-4-turbo-preview", temperature=0 )
+    ChatOpenAI(      model="gpt-4-turbo-preview", temperature=0 )
 ]
 
 

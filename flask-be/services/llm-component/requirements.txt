@@ -1,14 +1,1 @@
 langchain
-llama-index-readers-github
-llama-index
-nest_asyncio 
-httpx
-pandas 
-numpy
-pymongo
-tqdm
-pydantic
-langchain_openai
-matplotlib
-GitPython
-boto3s
