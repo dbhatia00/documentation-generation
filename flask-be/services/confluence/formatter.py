@@ -106,7 +106,7 @@ def _format_functions(functions):
         {
             "type": "paragraph",
             "content": [
-                {"type": "text", "text": "Packages", "marks": [{"type": "strong"}]}
+                {"type": "text", "text": "Functions", "marks": [{"type": "strong"}]}
             ],
         },
         {
