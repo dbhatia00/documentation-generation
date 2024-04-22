@@ -29,7 +29,7 @@ const MainPageText = `
   `;
 
 const GithubLoggedInText = `
-  <div class="mainbg-text-title">Login Success</div>
+  <div class="mainbg-text-title col-md">Login Success</div>
 
   <div class="mainbg-text-subtitle">Fetch</div>
   <div class="mainbg-text-content">Almost there! Using the {username}/{repo name} format, enter your Github repo name below and click fetch.</div>
@@ -43,10 +43,24 @@ const GithubLoggedInText = `
   <div class="mainbg-text-content">To use [Project Name] Please use the "Link to Confluence" button below to give us authorization for your confluence page, so that we can store the generated documents in your confluence.</div>
 `
 
+const CreateConfluenceText = `
+  <div class="mainbg-text-title col-md">Generated Successfully</div>
+
+  <div class="mainbg-text-subtitle">Confluence Page</div>
+  <div class="mainbg-text-content">Here we go! Please provide your email, Confluence domain, and API token. This way we can store your stuff in your Confluence so you can view and edit it!</div>
+
+`
+
 function App() {
   // State variables to store repository URL, doc content, and output messages
   // TODO: Remove all references to a doc, replace with the generated documentation
   const [repoUrl, setRepoUrl] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [confluenceDomain, setConfluenceDomain] = useState('');
+  const [apiToken, setApiToken] = useState('');
+
+  const [mainText, setMainText] = useState(MainPageText)
+
   const [docContent, setdocContent] = useState('');
   const [output, setOutput] = useState('');
   const [rerender, setRerender] = useState(false);
@@ -134,7 +148,7 @@ function App() {
   // Button to handle the github URL and fetch the doc
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setOutput('Generating Content...')
+    setOutput('Generating Content...') // Generating Content...
     try {
       // Sends the repo URL to the backend
       const response = await fetch('/api/get_doc', {
@@ -149,7 +163,7 @@ function App() {
       const data = await response.json();
       if (response.ok) {
         setdocContent(data.doc_content); // Decode base64 content
-        setOutput('');
+        setOutput('Fetch successful!');
       } else {
         setOutput(data.error || 'Failed to fetch doc');
       }
@@ -192,6 +206,46 @@ function App() {
     }
   };
 
+  const handleCreateConfluence = async () => {
+    try {
+      const response = await fetch('/api/create_confluence', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          confluence_domain: confluenceDomain,
+          repo_url: repoUrl,
+          email: userEmail,
+          api_token: apiToken,
+        }),
+      });
+
+    } catch (error) {
+      console.error('Error:', error);
+      setOutput('Failed to create confluence');
+    }
+  }
+
+  const FetchOutput = () => {
+    if (output === 'Generating Content...') {
+      return <div class="row">
+                <div class="col-md-2"><p class="loader"></p></div>
+                <div class="col-md-10">{output}</div>
+              </div>
+    } else if (output === '') {
+      return <div> </div>
+    } else if (output === 'Push successful!') {
+      return <div>{output} <i class="fa-solid fa-thumbs-up"></i></div>
+    } else if (output === 'Fetch successful!') {
+      return <div>{output} <i class="fa-solid fa-thumbs-up"></i></div>
+    }
+    else {
+      // all error case
+      return <div>{output} <i class="fa-solid fa-bomb"></i></div>
+    }
+  }
+
   // TODO: Adding more logic related to confluence here
   const handleConfluencePush = () => {
     console.log(
@@ -199,6 +253,60 @@ function App() {
       localStorage.getItem('confluenceAccessToken')
     );
   };
+
+  const CreateConfluenceButton = (
+    <button type="button" class="btn btn-dark mb-4" onClick={handleCreateConfluence}>
+      Create Confluence Domain
+    </button>
+  )
+
+  const CreateConfluenceField = (
+    <div>
+      {docContent && output === 'Fetch successful!' &&
+        <div>
+                <div class="row mt-4 mb-4">
+          <div class="col-md">
+              <div class="form-floating">
+                <input type='text' value={confluenceDomain}
+                    onChange={(e) => setConfluenceDomain(e.target.value)}
+                    required
+                    class="form-control"
+                    id="confluence-domain">
+                </input>
+                <label for="confluence-domain">Confluence Domain</label>
+              </div>
+          </div>
+          <div class="col-md">
+            <div class="form-floating">
+                <input type='email' value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    required
+                    class="form-control"
+                    id="user-email">
+                </input>
+                <label for="user-email">Email</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col form-floating">
+                <input type='text' value={apiToken}
+                    onChange={(e) => setApiToken(e.target.value)}
+                    required
+                    class="form-control"
+                    id="api-token">
+                </input>
+                <label for="api-token">API Token</label>
+            </div>
+        </div>
+
+        {CreateConfluenceButton}
+
+        </div>
+      }
+    </div>
+  )
 
   const LinkConfluenceButton = (
     <div>
@@ -227,10 +335,11 @@ function App() {
   );
 
   const FetchRepoInputBox = (
-    <div class="mb-5">
+    // <div class="border border-secondary-subtle rounded p-2">
+    <div>
       {/* URL Input */}
       <form onSubmit={handleSubmit}>
-        <div class="input-group mb-3">
+        <div class="input-group mb-4">
           <span class="input-group-text" id="enter-url">Enter GitHub Repository</span>
           <input type="text" value={repoUrl}
               onChange={(e) => setRepoUrl(e.target.value)}
@@ -244,27 +353,38 @@ function App() {
         {/* Get doc Button */}
       </form>
       {/* Output Label */}
-      {output && <p className="output">{output}</p>}
+      {output && <div class="fs-6"><FetchOutput /></div>}
+
+      {CreateConfluenceField}
 
       {/* Box to hold doc data */}
-      {docContent && (
-        <div className="doc">
-          <h2>Generated Doc</h2>
-          <textarea
-            value={docContent}
-            onChange={(e) => setdocContent(e.target.value)}
-            rows={10}
-            cols={80}
-          />
-          {/* Push edits to repository button */}
-          <button onClick={handlePushEdits}>Push Edits</button>
-        </div>
-      )}
+      {
+      // docContent && (
+      //   <div className="doc">
+      //     <h2>Generated Doc</h2>
+      //     <textarea
+      //       value={docContent}
+      //       onChange={(e) => setdocContent(e.target.value)}
+      //       rows={10}
+      //       cols={80}
+      //     />
+      //     {/* Push edits to repository button */}
+      //     <button onClick={handlePushEdits}>Push Edits</button>
+      //   </div>
+      // )
+      }
     </div>
   );
 
   const CardClickNavigate = () => {
 
+  }
+
+  const fakeOnClick = () => {
+    console.log(docContent)
+    console.log(output)
+    setdocContent("1111111")
+    setOutput('Fetch successful!')
   }
 
 
@@ -275,11 +395,15 @@ function App() {
           <div class="col-6">
             <div class="mainbg-base">
               <ReactTyped strings={[
-                localStorage.getItem('accessToken') ? GithubLoggedInText : MainPageText
+                localStorage.getItem('accessToken') ? GithubLoggedInText : (docContent && output === 'Fetch successful!') ? CreateConfluenceText : MainPageText
                 ]} typeSpeed={3} contentType="html" cursorChar=""/>
               {/* <div className="cursor" style={{ display: 'inline-block' }}>|</div> */}
             </div>
           </div>
+        </div>
+
+        <div>
+          <button onClick={fakeOnClick}>fake click</button>
         </div>
 
           <div class="row mt-2">
@@ -289,11 +413,12 @@ function App() {
                 {localStorage.getItem('accessToken') ? (
                     <div>
                       {FetchRepoInputBox}
-                      <div class="row">
-                        <div class="col-md-6">
+                      <div class="row mt-2">
+                        {/* <div class="col-md-6">
                           {LinkConfluenceButton}
-                        </div>
-                        <div class="col-md-6 d-md-flex justify-content-md-end">
+                        </div> */}
+                        {/* <div class="col-md-6 d-md-flex justify-content-md-end"> */}
+                        <div class="col-md-6">
                           <button
                             class="btn btn-danger"
                             onClick={() => {
