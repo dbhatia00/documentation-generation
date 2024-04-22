@@ -109,9 +109,10 @@ def get_data_files(files, supported_languages = ['python', 'java', 'javascript']
 
 # User needs to specify the clone_url, branch, and language of the repository they want to load.
 def get_git_files(repo_path, clone_url, branch="master"):
+    logger.info(f"Loading git files for repository: {clone_url}")
     loader = None
     files  = None
-    for br in ['master', 'main']:
+    for br in ['main', 'master']:
         try:
             loader = GitLoader(
                 clone_url=clone_url,
@@ -120,9 +121,10 @@ def get_git_files(repo_path, clone_url, branch="master"):
                 # file_filter=lambda file_path: file_path.endswith(".py") #or file_path.endswith(".java") or file_path.endswith(".js"),
             )
             files = loader.load()
+            logger.info(f"Files loaded for branch {br}. Number of files: {len(files)}")
             break
         except Exception as e:
-            logger.error(f"Error loading git files: {e}")
+            logger.error(f"Error loading git files: {e} for branch {br}")
 
     if not loader or not files:
         logger.error("Error loading git files: Loader not initialized")

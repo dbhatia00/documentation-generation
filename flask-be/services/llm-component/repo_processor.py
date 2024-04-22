@@ -77,7 +77,7 @@ def parallel_process_files(files, repo_url, repo_name):
 def download_and_process_repo_url(repo_url, supported_languages = ['python', 'java', 'javascript']):
     repo_name_with_owner  = repo_url.split("github.com/")[1]
     repo_name             = repo_name_with_owner.split("/")[1]
-    local_repo_dir        = f"example_data/{repo_name}"
+    local_repo_dir        = f"/tmp/{repo_name}"
     files                 = get_git_files(local_repo_dir, repo_url)
     files                 = get_data_files(files, supported_languages)
     
