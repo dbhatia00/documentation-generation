@@ -57,7 +57,7 @@ def process_file(file, repository_url, repo_name):
             
 
 def parallel_process_files(files, repo_url, repo_name):
-    start_llm_generation(repo_url)
+    # start_llm_generation(repo_url)
     data_dict = {}
     with ThreadPoolExecutor(max_workers=32) as executor:
         # Wrap tqdm around future results for progress bar functionality
@@ -73,11 +73,15 @@ def parallel_process_files(files, repo_url, repo_name):
     complete_llm_generation(repo_url)
                 
     return data_dict
+
+import os
                 
 def download_and_process_repo_url(repo_url, supported_languages = ['python', 'java', 'javascript']):
     repo_name_with_owner  = repo_url.split("github.com/")[1]
     repo_name             = repo_name_with_owner.split("/")[1]
     local_repo_dir        = f"/tmp/{repo_name}"
+    if os.path.exists(local_repo_dir):
+        shutil.rmtree(local_repo_dir)
     files                 = get_git_files(local_repo_dir, repo_url)
     files                 = get_data_files(files, supported_languages)
     
