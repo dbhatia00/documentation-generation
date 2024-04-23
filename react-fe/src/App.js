@@ -208,6 +208,11 @@ function App() {
 
   const handleCreateConfluence = async () => {
     try {
+      console.log("I've been there")
+      console.log("email", userEmail)
+      console.log("repo_url", repoUrl)
+      console.log("confluence domain", confluenceDomain)
+      console.log("api_token", apiToken)
       const response = await fetch('/api/create_confluence', {
         method: 'POST',
         headers: {
@@ -215,12 +220,18 @@ function App() {
         },
         body: JSON.stringify({
           confluence_domain: confluenceDomain,
-          repo_url: repoUrl,
+          repo_url: "https://github.com/" + repoUrl,
           email: userEmail,
           api_token: apiToken,
         }),
       });
 
+      if (response.ok) {
+        alert("Confluence Page Created Successfully!")
+      } else {
+        alert("Confluence Page Creation: Error!")
+      }
+    
     } catch (error) {
       console.error('Error:', error);
       setOutput('Failed to create confluence');
@@ -376,9 +387,18 @@ function App() {
     </div>
   );
 
-  const CardClickNavigate = () => {
-
+  const CardClickNavigateOne = () => {
+    window.open("https://github.com/dbhatia00/documentation-generation")
   }
+
+  const CardClickNavigateTwo = () => {
+    window.open("https://github.com/dbhatia00/documentation-generation/blob/main/documentation/Roles.md")
+  }
+
+  const CardClickNavigateThree = () => {
+    window.open()
+  }
+
 
   const fakeOnClick = () => {
     console.log(docContent)
@@ -402,9 +422,9 @@ function App() {
           </div>
         </div>
 
-        <div>
+        {/* <div>
           <button onClick={fakeOnClick}>fake click</button>
-        </div>
+        </div> */}
 
           <div class="row mt-2">
             <div class="col-6">
@@ -445,21 +465,21 @@ function App() {
             </div>
             <div class="col-6">
               <div class="col-container">
-                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigate}>
+                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigateOne}>
                       <div class="card-body">
                         <h5 class="card-title">Documentation Generation</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">Learn more about our project</h6>
-                        <p class="card-text">Details details details details details details details details details details details details, details details details details details details details details. details details details details details details details details details details details details details details.</p>
+                        <p class="card-text">A web app that, when provided a github link, generates a confluence page describing what the app does based on classes/methods within. This process will work on most mainstream languages, but will be implemented focusing on a Java source code target. </p>
                       </div>  
                     </animated.div>
-                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigate}>
+                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigateTwo}>
                       <div class="card-body">
                         <h5 class="card-title">About Us</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">Learn more about our team</h6>
                         <p class="card-text">Details details details details details details details details details details details details, details details details details details details details details. details details details details details details details details details details details details details details.</p>
                       </div>  
                     </animated.div>
-                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigate}>
+                    <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigateThree}>
                       <div class="card-body">
                         <h5 class="card-title">Looking Forward</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">Learn more about future works</h6>
