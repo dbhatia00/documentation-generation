@@ -46,13 +46,49 @@ button {
 }
 
 .main-theme {
-  background-image: url("images/mainbg3.jpg");
+  /* background-image: url("images/mainbg3.jpg"); */
+  
   height: 100vh;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
+.custom-navbar {
+  background-color: #f7f9fa;
+}
+
+.custom-preview {
+  background-color: white;
+}
+
+.custom-code {
+  background-color: #ebeef3;
+}
+
+.custom-bar {
+  opacity: 20%;
+}
+
+.custom-bold {
+  font-weight: bold;
+  color: black;
+}
+
+.custom-icon {
+  opacity: 60%;
+}
+
+.line {
+  position: fixed;
+  top: 18%; /* Adjust as needed */
+  left: 4%;
+  width: 50%;
+  opacity: 7%;
+  height: 1.5px;
+  background-color: black;
+  z-index: 0;
+}
 
 .typing-bg::before {
   content: "|";
@@ -78,14 +114,13 @@ button {
 }
 
 .mainbg-base {
-  margin-top: 4rem;
   opacity: 90%;
   position: relative;
 }
 
 .mainbg-text-title {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .mainbg-text-subtitle {

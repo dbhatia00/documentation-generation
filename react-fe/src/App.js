@@ -12,7 +12,7 @@ import {
 } from './util/login';
 
 const MainPageText = `
-  <div class="mainbg-text-title">Project Name</div>
+  <div class="mainbg-text-title border-bottom pb-2 mb-3">Project Name</div>
 
   <div class="mainbg-text-subtitle">Overview</div>
   <div class="mainbg-text-content">[Project Name] is an open-source Java library aimed at [brief description of the library's purpose or main functionality].</div>
@@ -29,7 +29,7 @@ const MainPageText = `
   `;
 
 const GithubLoggedInText = `
-  <div class="mainbg-text-title col-md">Login Success</div>
+  <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Login Success</div>
 
   <div class="mainbg-text-subtitle">Fetch</div>
   <div class="mainbg-text-content">Almost there! Using the {username}/{repo name} format, enter your Github repo name below and click fetch.</div>
@@ -44,7 +44,7 @@ const GithubLoggedInText = `
 `
 
 const CreateConfluenceText = `
-  <div class="mainbg-text-title col-md">Generated Successfully</div>
+  <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Generated Successfully</div>
 
   <div class="mainbg-text-subtitle">Confluence Page</div>
   <div class="mainbg-text-content">Here we go! Please provide your email, Confluence domain, and API token. This way we can store your stuff in your Confluence so you can view and edit it!</div>
@@ -63,6 +63,7 @@ function App() {
 
   const [docContent, setdocContent] = useState('');
   const [output, setOutput] = useState('');
+  const [cfOutput, setCfOutput] = useState('');
   const [rerender, setRerender] = useState(false);
   const [{ background }] = useSpring(
     () => ({
@@ -208,11 +209,11 @@ function App() {
 
   const handleCreateConfluence = async () => {
     try {
-      console.log("I've been there")
-      console.log("email", userEmail)
-      console.log("repo_url", repoUrl)
-      console.log("confluence domain", confluenceDomain)
-      console.log("api_token", apiToken)
+      // console.log("I've been there")
+      // console.log("email", userEmail)
+      // console.log("repo_url", repoUrl)
+      // console.log("confluence domain", confluenceDomain)
+      // console.log("api_token", apiToken)
       const response = await fetch('/api/create_confluence', {
         method: 'POST',
         headers: {
@@ -228,12 +229,15 @@ function App() {
 
       if (response.ok) {
         alert("Confluence Page Created Successfully!")
+        setCfOutput("Created Confluence Domain Successfully!")
       } else {
-        alert("Confluence Page Creation: Error!")
+        alert('Failed to create confluence')
+        setCfOutput('Failed to create confluence')
       }
     
     } catch (error) {
       console.error('Error:', error);
+      setCfOutput('Failed to create confluence')
       setOutput('Failed to create confluence');
     }
   }
@@ -257,6 +261,14 @@ function App() {
     }
   }
 
+  const CreateOutput = () => {
+    if (cfOutput === 'Created Confluence Domain Successfully!') {
+      return <div>{cfOutput} Don't forget to refresh your Confluence <i class="fa-solid fa-thumbs-up"></i></div>
+    } else {
+      return <div>{cfOutput} <i class="fa-solid fa-bomb"></i></div>
+    }
+  }
+
   // TODO: Adding more logic related to confluence here
   const handleConfluencePush = () => {
     console.log(
@@ -275,7 +287,7 @@ function App() {
     <div>
       {docContent && output === 'Fetch successful!' &&
         <div>
-                <div class="row mt-4 mb-4">
+          <div class="row mt-4 mb-4">
           <div class="col-md">
               <div class="form-floating">
                 <input type='text' value={confluenceDomain}
@@ -313,6 +325,7 @@ function App() {
         </div>
 
         {CreateConfluenceButton}
+        {cfOutput && <div class="fs-6"><CreateOutput /></div>}
 
         </div>
       }
@@ -367,6 +380,7 @@ function App() {
       {output && <div class="fs-6"><FetchOutput /></div>}
 
       {CreateConfluenceField}
+      
 
       {/* Box to hold doc data */}
       {
@@ -410,30 +424,52 @@ function App() {
 
   return (
     <div class="main-theme">
-        <div class="container">
-        <div class="row">
-          <div class="col-6">
-            <div class="mainbg-base">
+        <div>
+        <div class="row ps-4 pe-5">
+          <div class="col-md-7 border border-2 border-secondary-subtle rounded-3 p-0">
+            
+            <div class="mb-5">
+              
+            <nav class="navbar bg-body-tertiary custom-navbar border-top border-bottom border-2 border-secondary-subtle rounded-3">
+              <div class="container-fluid ps-2">
+                <div class="justify-content-start">
+                  <button class="btn btn-sm btn-outline-secondary custom-preview ps-3 pe-3" type="button"><span class="custom-bold">Preview</span></button>
+                  <button class="btn btn-sm btn-light custom-code ps-3 pe-3" type="button">Code&nbsp;&nbsp;&nbsp;<span class="custom-bar">|</span>&nbsp;&nbsp;&nbsp;Blame</button>
+                </div>
+                <div>
+                <div class="btn-group me-2" role="group" aria-label="Button group">
+                    <button type="button" class="btn btn-sm btn-light border"><span class="custom-bold">Raw</span></button>
+                    <button type="button" class="btn btn-sm btn-light border"><i class="fa-regular fa-copy custom-icon"></i></button>
+                    <button type="button" class="btn btn-sm btn-light border"><i class="fa-solid fa-download custom-icon"></i></button>
+                </div>
+
+                <div class="btn-group me-3" role="group" aria-label="Button group">
+                    <button type="button" class="btn btn-sm btn-light border"><i class="fa-solid fa-pencil custom-icon"></i></button>
+                    <button type="button" class="btn btn-sm btn-light border"><i class="fa-solid fa-caret-down custom-icon"></i></button>
+                </div>
+
+                <i class="fa-solid fa-bars custom-icon"></i>
+
+                </div>
+              </div>
+            </nav>
+
+            {/* <div class="line"></div> */}
+
+            <div class="mainbg-base mt-3 ms-5 me-5">
               <ReactTyped strings={[
-                localStorage.getItem('accessToken') ? GithubLoggedInText : (docContent && output === 'Fetch successful!') ? CreateConfluenceText : MainPageText
+                localStorage.getItem('accessToken') ? GithubLoggedInText : MainPageText
                 ]} typeSpeed={3} contentType="html" cursorChar=""/>
               {/* <div className="cursor" style={{ display: 'inline-block' }}>|</div> */}
             </div>
-          </div>
-        </div>
 
-        {/* <div>
-          <button onClick={fakeOnClick}>fake click</button>
-        </div> */}
-
-          <div class="row mt-2">
-            <div class="col-6">
+            <div class="mt-3 ms-5 me-5">
               <div class="maintitle opa-anime-two">
                 <div>
                 {localStorage.getItem('accessToken') ? (
                     <div>
                       {FetchRepoInputBox}
-                      <div class="row mt-2">
+                      <div class="row mt-3">
                         {/* <div class="col-md-6">
                           {LinkConfluenceButton}
                         </div> */}
@@ -455,15 +491,11 @@ function App() {
                   ) : <button class="btn btn-success align-middle" onClick={loginWithClientId}>Login with Github: Generate your own project documentation</button>}
                 </div>
               </div>
-              
-              {/* <h1 class='fs-3 border border-success p-2 mb-2 border-3 rounded-pill border-opacity-75 roboto-regular mb-5 maintitle text-success opa-anime-two'>
-                Documentation Generation <span></span>
-              </h1> */}
-              <div>
-
-                </div>
             </div>
-            <div class="col-6">
+            </div>
+
+          </div>
+          <div class="col-md-5">
               <div class="col-container">
                     <animated.div class="card fixed-height mt-4 d-none d-md-block right-card" style={{ background }} onClick={CardClickNavigateOne}>
                       <div class="card-body">
@@ -488,8 +520,12 @@ function App() {
                     </animated.div>
                     {/* <div class="card-background"></div> */}
               </div>
-            </div>
           </div>
+        </div>
+
+        {/* <div>
+          <button onClick={fakeOnClick}>fake click</button>
+        </div> */}
         </div>
     </div>
   );
