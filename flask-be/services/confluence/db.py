@@ -56,7 +56,6 @@ def get_repo_info(repo_url):
     """
     repo_output = get_documentation_by_url(repo_url)
     if repo_output == None:
-        print("repo url in backend", repo_url)
         print("confluence.db.repo_output returned None")
         return None
 
