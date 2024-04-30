@@ -82,7 +82,7 @@ def get_data_files(files, supported_languages = ['python', 'java', 'javascript']
             raise ValueError('Language not supported')
         
     file_ext_list = [dict_file_ext[x] for x in supported_languages]
-    files = [x for x in files if x.metadata['file_type'] in file_ext_list and 'tests' not in x.metadata['file_path']]
+    files = [x for x in files if x.metadata['file_type'] in file_ext_list and 'tests' not in x.metadata['file_path'] and '__init__.py' not in x.metadata['file_path']]
     
     temp_str     = " ".join([x.page_content for x in files])
     total_tokens = num_tokens_from_messages([{"message": temp_str}], model="gpt-4-32k-0613") 

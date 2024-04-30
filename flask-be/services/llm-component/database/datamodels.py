@@ -137,7 +137,7 @@ def external_json_to_respsitory_confluence_output(json_data: dict) -> Repository
         file_object = external_json_to_file_confluence_output({file_path : file_data})
         file_path = file_path.replace(".", "_")
         formatted_json["files"][file_path] = file_object
-    print(formatted_json)
+    # print(formatted_json)
     return RepositoryConfluenceOutput(**formatted_json)
 
 def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOutput:
@@ -164,7 +164,7 @@ def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
         functions[function_name] = FunctionDetail(**function_data)
     formatted_json["packages"] = packages
     formatted_json["functions"] = functions
-    print(formatted_json)
+    # print(formatted_json)
     return FileConfluenceOutput(**formatted_json)
 
 def database_json_to_respsitory_confluence_output(json_data: dict) -> RepositoryConfluenceOutput:
@@ -184,13 +184,18 @@ def database_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     formatted_json["repository_summary"] = json_data.get("repository_summary", "")
     formatted_json["confluence_space_id"] = json_data.get("confluence_id", "")
     formatted_json["confluence_domain"] = json_data.get("confluence_domain", "")
-    formatted_json["repo_overview_data"] = RepoOverviewOutput(**json_data.get("repo_overview_data", {}))
+    repo_overview_data = json_data.get("repo_overview_data", {})
+    if repo_overview_data:
+        formatted_json["repo_overview_data"] = RepoOverviewOutput(**repo_overview_data)
+    # else:
+        # formatted_json["repo_overview_data"] = None
+    # formatted_json["repo_overview_data"] = RepoOverviewOutput(**json_data.get("repo_overview_data", {}))
     formatted_json["files"] = {}
     files = json_data["files"]
     for file_path, file_data in files.items():
         replacement_file_name = file_path.replace("_", ".")
         file_data["file_path"] = replacement_file_name
-        print("Now the file path is", file_data["file_path"])
+        # print("Now the file path is", file_data["file_path"])
         packages = file_data.get("packages", {})
         functions = file_data.get("functions", {})
         for package_name, package_data in packages.items():
@@ -225,7 +230,7 @@ def database_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
         functions[function_name] = FunctionDetail(**function_data)
     formatted_json["packages"] = packages
     formatted_json["functions"] = functions
-    print(formatted_json)
+    # print(formatted_json)
     return FileConfluenceOutput(**formatted_json)
 
 

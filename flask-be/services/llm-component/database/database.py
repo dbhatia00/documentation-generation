@@ -35,6 +35,11 @@ client = MongoClient(DATABASE_URI, tlsAllowInvalidCertificates=True)
 db = client["user_documentation"]
 collection = db["documentation_store"]
 
+import logging 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
 # ALL REPOSITORY LEVEL OPERATIONS
 def get_documentation_by_url(repository_url: str) -> Optional[RepositoryConfluenceOutput]:
     """
@@ -85,7 +90,7 @@ def add_file_to_repository(repository_url: str, file_confluence_output: FileConf
     """
     update_query = {"repository_url": repository_url}
     file_data_key = "files." + file_confluence_output.file_path.replace('.', '_')  # Replace dots with underscores
-    print(file_data_key)
+    logger.info(f"Adding file to repository: {file_data_key}")
     file_data = {
         "$set": {
             file_data_key: file_confluence_output.model_dump()
@@ -101,7 +106,7 @@ def add_project_overview_to_repository(repository_url: str, repo_overview_output
     """
     update_query = {"repository_url": repository_url}
     file_data_key = "repo_overview_data"  # Replace dots with underscores
-    print(file_data_key)
+    logger.info(f"Adding file to repository: {file_data_key}")
     file_data = {
         "$set": {
             file_data_key: repo_overview_output.model_dump()
@@ -231,7 +236,7 @@ def start_file_processing(repository_url, file_name):
     """
     file_name = file_name.replace('.', '_')
     if(db["status"].find_one({"repository_url": repository_url}) is None):
-        print("Not found")
+        logger.info(f"Creating new status document for {repository_url}")
         start_llm_generation(repository_url)
     # result = db["status"].update_one(
     #     {"repository_url": repository_url},
@@ -302,3 +307,13 @@ def get_status_by_file(repository_url, file_name):
 
     # Return None if the file status is not found.
     return None
+
+def get_all_urls_in_db():
+    """
+    Retrieves all repository URLs stored in the database.
+
+    Returns:
+    - list: A list of repository URLs.
+    """
+    urls = collection.find({}, {"repository_url": 1, "_id": 0})
+    return [url["repository_url"] for url in urls]

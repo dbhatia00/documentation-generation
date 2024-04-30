@@ -1,4 +1,4 @@
-from database import add_file_to_repository, get_documentation_by_url, put_new_repository_documentation, get_file_documentation, start_llm_generation, start_file_processing, complete_file_processing, complete_llm_generation
+from database import add_file_to_repository, get_documentation_by_url, put_new_repository_documentation, get_file_documentation, start_file_processing, complete_file_processing, complete_llm_generation
 from database import RepositoryConfluenceOutput, external_json_to_file_confluence_output, external_json_to_repo_overview_output, add_project_overview_to_repository
 from utils import load_config, set_environment_variables, num_tokens_from_messages, get_git_files, get_data_files
 from OverviewChain import OverviewParser, ConfluenceOverviewChain
@@ -15,6 +15,7 @@ import nest_asyncio
 import shutil
 nest_asyncio.apply()
 import ast
+import traceback
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -51,15 +52,15 @@ def process_file(file, repository_url, repo_name):
     except Exception as e:
         logger.error(f"Error processing file {file.metadata['file_path']}: {e}")
         complete_file_processing(repository_url, file.metadata['file_path'], False)
+        traceback.print_exc()
         raise e
     
     return output
             
 
 def parallel_process_files(files, repo_url, repo_name):
-    # start_llm_generation(repo_url)
     data_dict = {}
-    with ThreadPoolExecutor(max_workers=32) as executor:
+    with ThreadPoolExecutor(max_workers=64) as executor:
         # Wrap tqdm around future results for progress bar functionality
         future_to_file = {executor.submit(process_file, file, repo_url, repo_name): file for file in files}
         for future in tqdm(as_completed(future_to_file), total=len(files)):
@@ -70,7 +71,7 @@ def parallel_process_files(files, repo_url, repo_name):
             except Exception as exc:
                 print(f'{file.metadata["file_path"]} generated an exception: {exc}')
     
-    complete_llm_generation(repo_url)
+    # complete_llm_generation(repo_url)
                 
     return data_dict
 
@@ -87,8 +88,12 @@ def download_and_process_repo_url(repo_url, supported_languages = ['python', 'ja
     
     data_dict             = parallel_process_files(files, repo_url, repo_name)
     
-    # TODO: Generate a summary of the repository and add it to the database
     repo_overview         = process_and_add_repo_overview_to_db(repo_url, str(data_dict))
+    
+    complete_llm_generation(repo_url)
+    
+    if os.path.exists(local_repo_dir):
+        shutil.rmtree(local_repo_dir)
     
     logger.info(f"Finished processing repository URL: {repo_url}")
     
@@ -105,15 +110,15 @@ def get_repo_overview(name_of_repo, repo_data):
 
 def process_and_add_repo_overview_to_db(repo_url, repo_data):
     try:
-        start_file_processing(repo_url, 'repo_overview_data')
+        start_file_processing(repo_url, 'repo-overview-data')
         repo_overview = get_repo_overview(repo_url, repo_data)
         with MongoClient() as client:
             repo_overview_pydantic = external_json_to_repo_overview_output(repo_overview)
             add_project_overview_to_repository(repo_url, repo_overview_pydantic)
-            complete_file_processing(repo_url, 'repo_overview_data')
+            complete_file_processing(repo_url, 'repo-overview-data')
     except Exception as e:
         logger.error(f"Error processing file `repo_overview_data`: {e}")
-        complete_file_processing(repo_url, 'repo_overview_data', False)
+        complete_file_processing(repo_url, 'repo-overview-data', False)
         raise e
     
     return repo_overview
