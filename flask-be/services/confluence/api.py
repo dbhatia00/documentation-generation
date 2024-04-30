@@ -36,17 +36,16 @@ def handle_repo_confluence_pages(repo_url, domain, space_id, auth):
         domain=domain,
         auth=auth,
         space_id=space_id,
-        repo_summary=repo_info["repo_summary"],
+        repo_overview=repo_info["repo_overview"],
     )
     if success is False:
+        print("handle_repo_confluence_pages: update_home_page failed")
         return False
 
     # create a new page or update an existing page for each file in the repo
     for file_info in repo_info["file_info_list"]:
-        file_path = file_info["file_path"]
         success = handle_file_confluence_page(
-            repo_url=repo_url,
-            file_path=file_path,
+            file_info=file_info,
             domain=domain,
             space_id=space_id,
             auth=auth,
@@ -83,13 +82,6 @@ def _create_space(domain, auth, repo_name):
     url = f"https://{domain}/wiki/rest/api/space"
     response = requests.request("POST", url, data=payload, headers=headers, auth=auth)
 
-    print(
-        "_CREATE_SPACE:\n",
-        json.dumps(
-            json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")
-        ),
-    )
-
     if response.status_code != 200:
         return None, None
     else:
@@ -97,7 +89,7 @@ def _create_space(domain, auth, repo_name):
         return data["key"], str(data["id"])
 
 
-def update_home_page(domain, auth, space_id, repo_summary):
+def update_home_page(domain, auth, space_id, repo_overview):
     """
     Updates the home page for the space with space_id with the repo_summary provided.
 
@@ -116,6 +108,7 @@ def update_home_page(domain, auth, space_id, repo_summary):
     response = requests.request("GET", url, headers=headers, auth=auth)
 
     if response.status_code != 200:
+        print("confluence.api.update_home_page: response.status_code != 200")
         return False
     else:
         data = response.json()
@@ -133,15 +126,19 @@ def update_home_page(domain, auth, space_id, repo_summary):
         page_id=homepage_id, domain=domain, auth=auth
     )
     if get_page_result is False:
+        print("confluence.api.update_home_page: get_page_result is False")
         return False
+    overview_page_body = services.confluence.formatter.get_overview_page_body(
+        repo_overview=repo_overview
+    )
     payload = json.dumps(
         {
             "id": homepage_id,
             "status": "current",
-            "title": "Repo Summary",
+            "title": "Project Overview",
             "body": {
-                "representation": "storage",
-                "value": repo_summary,
+                "representation": "atlas_doc_format",
+                "value": json.dumps(overview_page_body),
             },
             "version": {"number": version_number + 1},
         }
@@ -162,15 +159,14 @@ def update_home_page(domain, auth, space_id, repo_summary):
         return True
 
 
-def handle_file_confluence_page(repo_url, file_path, domain, space_id, auth):
+def handle_file_confluence_page(file_info, domain, space_id, auth):
     """
     Outputs the documentation content to a Confluence page for a given file in a given repo. Creates the Confluence page and writes the page_id to the database if it does not already exist.
 
     TODO: 1. integrate with triggers: should be triggered after status of page becomes "complete" in db 2. write page_id to database
 
     Args:
-        repo_url (str): The url of the repository.
-        file_path (str): The path of the file in the repository.
+        file_info (dict): A dictionary containing information about the file, pulled from the database.
         domain (str): The domain of the Confluence instance.
         space_id (str): The ID of the space where the page will be created.
         auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
@@ -178,15 +174,10 @@ def handle_file_confluence_page(repo_url, file_path, domain, space_id, auth):
     Returns:
         bool: True if the page update (and creation) was successful, False otherwise.
     """
-    file_info = services.confluence.db.get_file_info(
-        repo_url=repo_url, file_path=file_path
-    )
-    if file_info is None:
-        return False
-
     # TODO: get space_id and domain from db instead of passing down from handle_repo_confluence_pages
     file_info["space_id"] = space_id
     file_info["domain"] = domain
+    file_path = file_info["file_path"]
 
     # check if file already has a corresponding confluence page_id
     # if not, create a new page
