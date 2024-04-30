@@ -59,7 +59,7 @@ function App() {
   const [confluenceDomain, setConfluenceDomain] = useState('');
   const [apiToken, setApiToken] = useState('');
 
-  const [mainText, setMainText] = useState(MainPageText)
+  // const [mainText, setMainText] = useState(MainPageText)
 
   const [docContent, setdocContent] = useState('');
   const [output, setOutput] = useState('');
@@ -83,44 +83,6 @@ function App() {
     }),
     []
   )
-
-  // const [{ background: background2 }] = useSpring(
-  //   () => ({
-  //     from: { background: '#efefef' },
-  //     to: [
-  //       { background: '#efefef' },
-  //       { background: '#dedede' },
-  //       { background: '#c9c9c9' },
-  //       { background: '#dedede' },
-  //       { background: '#efefef' },
-  //       { background: '#ffffff' },
-  //     ],
-  //     config: config.molasses,
-  //     loop: {
-  //       reverse: true,
-  //     },
-  //   }),
-  //   []
-  // )
-
-  // const [{ background3 }] = useSpring(
-  //   () => ({
-  //     from: { background: '#dedede' },
-  //     to: [
-  //       { background: '#dedede' },
-  //       { background: '#c9c9c9' },
-  //       { background: '#dedede' },
-  //       { background: '#efefef' },
-  //       { background: '#ffffff' },
-  //       { background: '#efefef' },
-  //     ],
-  //     config: config.molasses,
-  //     loop: {
-  //       reverse: true,
-  //     },
-  //   }),
-  //   []
-  // )
   
 
   useEffect(() => {
@@ -209,11 +171,6 @@ function App() {
 
   const handleCreateConfluence = async () => {
     try {
-      // console.log("I've been there")
-      // console.log("email", userEmail)
-      // console.log("repo_url", repoUrl)
-      // console.log("confluence domain", confluenceDomain)
-      // console.log("api_token", apiToken)
       const response = await fetch('/api/create_confluence', {
         method: 'POST',
         headers: {
@@ -381,23 +338,6 @@ function App() {
 
       {CreateConfluenceField}
       
-
-      {/* Box to hold doc data */}
-      {
-      // docContent && (
-      //   <div className="doc">
-      //     <h2>Generated Doc</h2>
-      //     <textarea
-      //       value={docContent}
-      //       onChange={(e) => setdocContent(e.target.value)}
-      //       rows={10}
-      //       cols={80}
-      //     />
-      //     {/* Push edits to repository button */}
-      //     <button onClick={handlePushEdits}>Push Edits</button>
-      //   </div>
-      // )
-      }
     </div>
   );
 
@@ -470,10 +410,6 @@ function App() {
                     <div>
                       {FetchRepoInputBox}
                       <div class="row mt-3">
-                        {/* <div class="col-md-6">
-                          {LinkConfluenceButton}
-                        </div> */}
-                        {/* <div class="col-md-6 d-md-flex justify-content-md-end"> */}
                         <div class="col-md-6">
                           <button
                             class="btn btn-danger"
