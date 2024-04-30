@@ -1,3 +1,67 @@
+def get_overview_page_body(repo_overview):
+    content = []
+    for section_title, section_info in repo_overview.items():
+        if type(section_info) == dict:
+            content.extend(_get_list_section_from_dict(section_title, section_info))
+        else:
+            content.extend(
+                [
+                    {
+                        "type": "heading",
+                        "attrs": {"level": 3},
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": str(section_title).replace("_", " "),
+                            }
+                        ],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": section_info}],
+                    },
+                ]
+            )
+    print({"version": 1, "type": "doc", "content": content})
+    return {"version": 1, "type": "doc", "content": content}
+
+
+def _get_list_section_from_dict(title, info_dict):
+    content_list = []
+    for key, value in info_dict.items():
+        content_list.append(
+            {
+                "type": "listItem",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": str(key) + ": ",
+                                "marks": [{"type": "strong"}],
+                            },
+                            {"type": "text", "text": str(value)},
+                        ],
+                    }
+                ],
+            }
+        )
+    return [
+        {
+            "type": "heading",
+            "attrs": {"level": 3},
+            "content": [
+                {
+                    "type": "text",
+                    "text": str(title).replace("_", " "),
+                }
+            ],
+        },
+        {"type": "orderedList", "attrs": {"order": 1}, "content": content_list},
+    ]
+
+
 def get_file_page_body(file_details):
     """
     Generate the request body for updating the confluence page of a file.
