@@ -24,6 +24,7 @@ from typing import Optional
 from services.database.datamodels import (
     RepositoryConfluenceOutput,
     FileConfluenceOutput,
+    Status,
     database_json_to_respsitory_confluence_output,
 )
 
