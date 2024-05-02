@@ -99,9 +99,7 @@ def retrieve_client_info():
     - Tuple containing client ID and client secret (both as strings).
 
     NOTES:
-    - The 'token_server.json' file must be present in the current directory.
-    - The JSON file should have keys 'client_id' and 'client_secret'.
-    - If the file or keys are missing, the function returns empty strings for both client ID and client secret.
+    - Internal helper function
     """
     # Retrieve GitHub token from a JSON file
     with open('token_server.json') as f:
@@ -154,11 +152,24 @@ def get_confluence_token():
         
     
 def retrieve_confluence_info():
+    """
+    DESCRIPTION: Retrieve Confluence client ID and client secret from a JSON file named 'token_server.json'.
+
+    INPUTS:
+    - None
+
+    OUTPUTS:
+    - Tuple containing Confluence client ID and client secret (both as strings).
+
+    NOTES:
+    - Internal Helper function
+    """
     with open('token_server.json') as f:
         tokens = json.load(f)
     confluence_client_id = str(tokens.get('confluence_client_id'))
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
+
 
 @app.route("/api/create_confluence", methods=["POST"])
 def create_confluence():
