@@ -1,4 +1,3 @@
-# backend/app.py
 from flask import Flask, jsonify, request
 from requests.auth import HTTPBasicAuth
 import requests
@@ -9,14 +8,20 @@ import services.confluence.api
 from services.database.database import watch_mongodb_stream, start_llm_generation
 app = Flask(__name__)
 
-'''
-    DESCRIPTION -   A function to handle the get_doc button click
-    INPUTS -        Repository URL
-    OUTPUTS -       Repository doc or error
-    NOTES -         Outward facing (called from the Frontend)
-'''
 @app.route('/api/get_doc', methods=['POST'])
 def get_doc():
+    """
+    DESCRIPTION: A function to handle the get_doc button click.
+    
+    INPUTS:
+    - Repository URL
+    
+    OUTPUTS:
+    - Repository doc or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     # Extract JSON data from the request
     data = request.get_json()
 
@@ -47,6 +52,18 @@ def get_doc():
 
 @app.route('/api/get_access_token', methods=['GET'])
 def get_access_token():
+    """
+    DESCRIPTION: A function to get the access token from GitHub.
+    
+    INPUTS:
+    - None
+    
+    OUTPUTS:
+    - Access token or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     try:
         # Extract client code from frontend
         client_code = request.args.get('code')
@@ -72,6 +89,20 @@ def get_access_token():
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 def retrieve_client_info(): 
+    """
+    DESCRIPTION: Retrieve GitHub client ID and client secret from a JSON file named 'token_server.json'.
+
+    INPUTS:
+    - None
+
+    OUTPUTS:
+    - Tuple containing client ID and client secret (both as strings).
+
+    NOTES:
+    - The 'token_server.json' file must be present in the current directory.
+    - The JSON file should have keys 'client_id' and 'client_secret'.
+    - If the file or keys are missing, the function returns empty strings for both client ID and client secret.
+    """
     # Retrieve GitHub token from a JSON file
     with open('token_server.json') as f:
         tokens = json.load(f)
@@ -81,6 +112,18 @@ def retrieve_client_info():
 
 @app.route('/api/get_confluence_token', methods=['GET'])
 def get_confluence_token():
+    """
+    DESCRIPTION: A function to get the Confluence access token.
+    
+    INPUTS:
+    - None
+    
+    OUTPUTS:
+    - Confluence access token or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     try:
         client_code = request.args.get('code')
         if not client_code:
@@ -117,14 +160,20 @@ def retrieve_confluence_info():
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
 
-"""
-    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
-    INPUTS -        Repository URL, confluence domain, email, api token
-    OUTPUTS -       Message of success or error
-    NOTES -         Outward facing (called from the Frontend)
-"""
 @app.route("/api/create_confluence", methods=["POST"])
 def create_confluence():
+    """
+    DESCRIPTION: A function that creates a Confluence space and pages for a given repository.
+    
+    INPUTS:
+    - Repository URL, confluence domain, email, api token
+    
+    OUTPUTS:
+    - Message of success or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     # Extract data from the request
     data = request.get_json()
     confluence_domain = data.get("confluence_domain")

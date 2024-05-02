@@ -136,39 +136,6 @@ function App() {
     }
   };
 
-  // Button to push edits to git
-  const handlePushEdits = async () => {
-    try {
-      // Send the updated text to the backend
-      const response = await fetch('/api/push_edits', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + localStorage.getItem('accessToken'),
-        },
-        body: JSON.stringify({
-          repo_url: repoUrl,
-          doc_content: docContent,
-        }),
-      });
-
-      // Waits for a successful push from the backend
-      const data = await response.json();
-      if (response.ok) {
-        // Clear Input fields
-        setRepoUrl('');
-        setdocContent('');
-        setOutput('Push successful!');
-        console.log(data); // Log success message or handle as required
-      } else {
-        setOutput(data.error || 'Failed to push edits');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setOutput('Failed to push edits');
-    }
-  };
-
   const handleCreateConfluence = async () => {
     try {
       const response = await fetch('/api/create_confluence', {
