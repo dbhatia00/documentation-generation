@@ -255,6 +255,43 @@ def retrieve_client_info():
     client_secret = str(tokens.get("client_secret"))
     return client_id, client_secret
 
+@app.route('/api/get_confluence_token', methods=['GET'])
+def get_confluence_token():
+    try:
+        client_code = request.args.get('code')
+        if not client_code:
+            return jsonify({'error': 'Login error with Confluence'}), 400
+        
+        confluence_client_id, confluence_client_secret = retrieve_confluence_info()
+    
+        params = {
+            'grant_type': 'authorization_code',
+            'client_id': confluence_client_id,
+            'client_secret': confluence_client_secret,
+            'code': client_code,
+            'redirect_uri': 'http://localhost:3000/'
+        }
+
+        get_access_token_url = 'https://auth.atlassian.com/oauth/token'
+        headers = { 'Content-Type': 'application/json'}
+
+        confluence_access_token_response = requests.post(get_access_token_url, json=params, headers=headers)
+        
+        if confluence_access_token_response.status_code == 200:
+            return jsonify(confluence_access_token_response.json()), 200
+        else:
+            return jsonify({'error': f'Failed to fetch confluence access token: {confluence_access_token_response.text}'}), 500
+        
+    except Exception as e:
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+        
+    
+def retrieve_confluence_info():
+    with open('token_server.json') as f:
+        tokens = json.load(f)
+    confluence_client_id = str(tokens.get('confluence_client_id'))
+    confluence_client_secret = str(tokens.get('confluence_client_secret'))
+    return confluence_client_id, confluence_client_secret
 
 """
     DESCRIPTION -   A function that creates a confluence space and pages for a given repository
