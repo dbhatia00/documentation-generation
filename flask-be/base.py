@@ -126,9 +126,9 @@ def get_confluence_token():
         client_code = request.args.get('code')
         if not client_code:
             return jsonify({'error': 'Login error with Confluence'}), 400
-        
+
         confluence_client_id, confluence_client_secret = retrieve_confluence_info()
-    
+
         params = {
             'grant_type': 'authorization_code',
             'client_id': confluence_client_id,
@@ -142,25 +142,25 @@ def get_confluence_token():
 
         confluence_access_token_response = requests.post(get_access_token_url, json=params, headers=headers)
         response_json = confluence_access_token_response.json() 
-        
+
         if confluence_access_token_response.status_code == 200:
             get_cloud_id_url = 'https://api.atlassian.com/oauth/token/accessible-resources'
             headers = { 'Authorization': 'Bearer ' + response_json['access_token'], 
                         'Accept': 'application/json',}
             cloudid_response = requests.get(get_cloud_id_url, headers=headers)
-            
+
             if confluence_access_token_response.status_code == 200:
                 return jsonify({'access_token': response_json['access_token'], 'cloud_id' : cloudid_response.json()[0]['id']}), 200
             else:
                 return jsonify({'error': f'Failed to fetch confluence cloud id: {cloudid_response.text}'}), 500
-            
+
         else:
             return jsonify({'error': f'Failed to fetch confluence access token: {confluence_access_token_response.text}'}), 500
-        
+
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-        
-    
+
+
 def retrieve_confluence_info():
     """
     DESCRIPTION: Retrieve Confluence client ID and client secret from a JSON file named 'token_server.json'.
@@ -180,7 +180,14 @@ def retrieve_confluence_info():
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
 
-
+"""
+    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
+    INPUTS -        repo_url: The URL of the repository.
+                    cloud_id: The ID of the Confluence cloud.
+                    confluence_access_code: The access code for Confluence API.
+    OUTPUTS -       Message of success or error.
+    NOTES -         Outward facing (called from the Frontend).
+"""
 @app.route("/api/create_confluence", methods=["POST"])
 def create_confluence():
     """
@@ -197,27 +204,20 @@ def create_confluence():
     """
     # Extract data from the request
     data = request.get_json()
-    confluence_domain = data.get("confluence_domain")
     repo_url = data.get("repo_url")
-    email = data.get("email")
-    api_token = data.get("api_token")
     cloud_id = data.get("cloud_id")
     confluence_access_code = data.get("confluence_access_code")
-    
-    
 
     # Check if the required data is provided
     if not repo_url or not cloud_id or not confluence_access_code:
         # Return an error response if any of the required data is missing
         return jsonify({"error": "Please provide all variables"}), 400
-    
-    print(cloud_id, confluence_access_code," --- test ")
 
     success = services.confluence.api.handle_repo_confluence_pages(
         repo_url=repo_url,
-        space_id=None,
         cloud_id=cloud_id,
         confluence_access_code=confluence_access_code,
+        commit_hash="TEST",
     )
 
     if not success:

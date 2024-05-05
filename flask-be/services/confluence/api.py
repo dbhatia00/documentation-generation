@@ -2,17 +2,19 @@ import services.confluence.db
 import services.confluence.formatter
 import requests
 import json
-import uuid
 
-def handle_repo_confluence_pages(repo_url, space_id, cloud_id, confluence_access_code):
+
+def handle_repo_confluence_pages(
+    repo_url, cloud_id, confluence_access_code, commit_hash
+):
     """
-    Outputs the documentation content to Confluence pages for all files in a given repo. If space_id is not given, a new space will be created. See handle_file_confluence_page() for more details.
+    Outputs the documentation content to Confluence pages for all files in a given repo. If space_id is not given, a new space will be created.
 
     Args:
         repo_url (str): The url of the repository.
-        domain (str): The domain of the Confluence instance.
-        space_id (str): The ID of the space where the pages will be created.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
+        commit_hash (str): The commit hash of the repository.
 
     Returns:
         bool: True if all pages were successfully updated, False otherwise.
@@ -21,19 +23,19 @@ def handle_repo_confluence_pages(repo_url, space_id, cloud_id, confluence_access
     if repo_info is None:
         return False
 
-    # create new space if space_id is not given
-    if space_id is None:
-        # TODO: construct space URL from space_key and return to front-end
-        space_key, space_id = _create_space(
-            cloud_id=cloud_id, 
-            confluence_access_code=confluence_access_code, 
-            repo_name=repo_info["repo_name"]
-        )
-        # unsuccessful space creation
-        if space_key is None or space_id is None:
-            return False
+    # create new space
+    # TODO: construct space URL from space_key and return to front-end
+    space_key, space_id = _create_space(
+        cloud_id=cloud_id,
+        confluence_access_code=confluence_access_code,
+        repo_name=repo_info["repo_name"],
+        commit_hash=commit_hash,
+    )
+    # unsuccessful space creation
+    if space_key is None or space_id is None:
+        print("confluence.api.handle_repo_confluence_pages: _create_space failed")
+        return False
 
-    # TODO: replace with or add a function that creates/updates repo level summary pages
     # update the home page of the space with the repo summary
     success = update_home_page(
         cloud_id=cloud_id, 
@@ -42,6 +44,7 @@ def handle_repo_confluence_pages(repo_url, space_id, cloud_id, confluence_access
         repo_overview=repo_info["repo_overview"],
     )
     if success is False:
+        print("confluence.api.handle_repo_confluence_pages: update_home_page failed")
         return False
 
     # create a new page or update an existing page for each file in the repo
@@ -53,6 +56,9 @@ def handle_repo_confluence_pages(repo_url, space_id, cloud_id, confluence_access
             confluence_access_code=confluence_access_code,
         )
         if success is False:
+            print(
+                f"confluence.api.handle_repo_confluence_pages: handle_file_confluence_page failed for {file_info['file_path']}"
+            )
             return False
 
     # TODO: ideally, confluence page hierarchy should reflect structure of directories in repo - need corresponding structures in LLM output
@@ -60,24 +66,26 @@ def handle_repo_confluence_pages(repo_url, space_id, cloud_id, confluence_access
     return True
 
 
-def _create_space(cloud_id, confluence_access_code, repo_name):
+def _create_space(cloud_id, confluence_access_code, repo_name, commit_hash):
     """
     Creates a new space in Confluence.
 
     Args:
-        domain (str): The domain of the Confluence instance.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
         repo_name (str): The name of the repository.
+        commit_hash (str): The commit hash of the repository.
 
     Returns:
-        str: a tuple containing the space key and space id of the created space. If the operation fails, returns None.
+        tuple: A tuple containing the space key and space id of the created space. If the operation fails, returns None.
     """
     headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + confluence_access_code }
 
+    space_key = "".join([char for char in repo_name if char.isalnum()]) + commit_hash
     payload = json.dumps(
         {
             "name": repo_name + ": Auto Generated Documentation",
-            "key": "".join([char for char in repo_name if char.isalnum()]) + "Doc" + uuid.uuid4().hex[:6],
+            "key": space_key,
         }
     )
 
@@ -96,14 +104,14 @@ def update_home_page(cloud_id, confluence_access_code, space_id, repo_overview):
     Updates the home page for the space with space_id with the repo_summary provided.
 
     Args:
-        domain (str): The domain of the Confluence instance.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
-        repo_summary (str): A str containing the summary information for the repository.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
+        space_id (str): The ID of the space where the home page will be updated.
+        repo_overview (str): A string containing the summary information for the repository.
 
     Returns:
         bool: True if the home page was successfully updated, False otherwise.
     """
-    # TODO: store repo home page info in db, and get home page ID from db instead of from confluence API
     # getting home page ID
     headers = {"Accept": "application/json", "Authorization": "Bearer " + confluence_access_code}
     url = f"https://api.atlassian.com/ex/confluence/{cloud_id}/wiki/api/v2/spaces/{space_id}"
@@ -114,7 +122,6 @@ def update_home_page(cloud_id, confluence_access_code, space_id, repo_overview):
         return False
     else:
         data = response.json()
-        homepage_id = None
         homepage_id = data["homepageId"]
         if homepage_id is None:
             print("confluence.api.update_home_page: homepage_id is None")
@@ -163,35 +170,32 @@ def handle_file_confluence_page(file_info, space_id, cloud_id, confluence_access
     """
     Outputs the documentation content to a Confluence page for a given file in a given repo. Creates the Confluence page and writes the page_id to the database if it does not already exist.
 
-    TODO: 1. integrate with triggers: should be triggered after status of page becomes "complete" in db 2. write page_id to database
-
     Args:
         file_info (dict): A dictionary containing information about the file, pulled from the database.
-        domain (str): The domain of the Confluence instance.
         space_id (str): The ID of the space where the page will be created.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
 
     Returns:
         bool: True if the page update (and creation) was successful, False otherwise.
     """
-    # TODO: get space_id and domain from db instead of passing down from handle_repo_confluence_pages
-    file_info["space_id"] = space_id
-    file_path = file_info["file_path"]
 
-    # check if file already has a corresponding confluence page_id
-    # if not, create a new page
-    page_id = file_info["page_id"]
-    if page_id is None:
-        create_result, page_id = _create_page(
-            file_info=file_info, file_path=file_path, cloud_id=cloud_id, confluence_access_code=confluence_access_code,
-        )
-        if create_result is False:
-            return False
-        # TODO: write page_id to database after successful creation
+    # create page for the given file
+    create_result, page_id = _create_page(
+        file_info=file_info,
+        cloud_id=cloud_id,
+        confluence_access_code=confluence_access_code,
+        space_id=space_id,
+    )
+    if create_result is False:
+        return False
 
     # insert documentation content into the confluence page
     update_result = _update_page(
-        file_info=file_info, file_path=file_path, page_id=page_id, cloud_id=cloud_id, confluence_access_code=confluence_access_code,
+        file_info=file_info,
+        page_id=page_id,
+        cloud_id=cloud_id,
+        confluence_access_code=confluence_access_code,
     )
     if update_result is False:
         return False
@@ -199,25 +203,22 @@ def handle_file_confluence_page(file_info, space_id, cloud_id, confluence_access
     return True
 
 
-def _create_page(file_info, file_path, cloud_id, confluence_access_code):
+def _create_page(file_info, cloud_id, confluence_access_code, space_id):
     """
     Creates a new page in Confluence.
 
     Args:
         file_info (dict): A dictionary containing information about the file, pulled from the database.
-            - space_id (str): The ID of the space where the page will be created.
-            - domain (str): The domain of the Confluence instance.
-
-        file_path (str): The path of the file in the repository.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
+        space_id (str): The ID of the space where the page will be created.
 
     Returns:
         tuple: A tuple containing a boolean value indicating the success of the operation
         and the ID of the created page. If the operation fails, the boolean value will be False
         and the ID will be None.
     """
-    space_id = file_info["space_id"]
-    title = file_path
+    title = file_info["file_path"]
     headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + confluence_access_code}
     payload = json.dumps(
         {
@@ -244,17 +245,15 @@ def _create_page(file_info, file_path, cloud_id, confluence_access_code):
         return True, data["id"]
 
 
-def _update_page(file_info, file_path, page_id, cloud_id, confluence_access_code):
+def _update_page(file_info, page_id, cloud_id, confluence_access_code):
     """
     Updates a Confluence page with the documentation.
 
     Args:
         file_info (dict): A dictionary containing information about the file, pulled from the database.
-            - space_id (str): The ID of the space where the page will be created.
-            - file_details (dictionary): A dictionary containing the documentation content for the file, see services.confluence.formatter.get_file_page_body() for more details.
-        file_path (str): The path of the file in the repository.
         page_id (str): The ID of the page to be updated.
-        auth (requests.auth.HTTPBasicAuth): The authentication object for the Confluence instance.
+        cloud_id (str): The cloud id of the Confluence instance.
+        confluence_access_code (str): The access code for the Confluence instance.
 
     Returns:
         bool: True if the page was successfully updated, False otherwise.
@@ -276,7 +275,7 @@ def _update_page(file_info, file_path, page_id, cloud_id, confluence_access_code
         {
             "id": page_id,
             "status": "current",
-            "title": file_path,
+            "title": file_info["file_path"],
             "body": {
                 "representation": "atlas_doc_format",
                 "value": json.dumps(file_body),
