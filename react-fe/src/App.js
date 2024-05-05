@@ -1,5 +1,9 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from "react";
+<<<<<<< HEAD
+=======
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
 import { ReactTyped } from "react-typed";
 import { useSpring, animated, config } from "@react-spring/web";
 import "./App.css";
@@ -9,6 +13,7 @@ import {
   getAccessToken,
   getConfluenceAccessToken,
 } from "./util/login";
+<<<<<<< HEAD
 
 const MainPageText = `
   <div class="mainbg-text-title border-bottom pb-2 mb-3">Automated Codebase Documentation Generator</div>
@@ -51,6 +56,10 @@ const CreateConfluenceText = `
   <div class="mainbg-text-content">Generation Complete! Please provide your email, Confluence domain, and API token. This way we can store your stuff in your Confluence so you can view and edit it!</div>
 
 `;
+=======
+import { MainPageText, GithubLoggedInText, CreateConfluenceText } from "./util/text";
+
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
 
 function App() {
   // State variables to store repository URL, doc content, and output messages
@@ -106,6 +115,8 @@ function App() {
     ) {
       getConfluenceAccessToken(codeParam, rerender, setRerender);
     }
+
+    console.log(localStorage);
   }, []);
 
   // Button to handle the github URL and fetch the doc
@@ -133,6 +144,42 @@ function App() {
     } catch (error) {
       console.error("Error:", error);
       setOutput("Failed to fetch doc");
+<<<<<<< HEAD
+=======
+    }
+  };
+
+  // Button to push edits to git
+  const handlePushEdits = async () => {
+    try {
+      // Send the updated text to the backend
+      const response = await fetch("/api/push_edits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+          doc_content: docContent,
+        }),
+      });
+
+      // Waits for a successful push from the backend
+      const data = await response.json();
+      if (response.ok) {
+        // Clear Input fields
+        setRepoUrl("");
+        setdocContent("");
+        setOutput("Push successful!");
+        console.log(data); // Log success message or handle as required
+      } else {
+        setOutput(data.error || "Failed to push edits");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setOutput("Failed to push edits");
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
     }
   };
 
@@ -148,6 +195,8 @@ function App() {
           repo_url: "https://github.com/" + repoUrl,
           email: userEmail,
           api_token: apiToken,
+          cloud_id: localStorage.getItem("confluenceCloudId"),
+          confluence_access_code: localStorage.getItem("confluenceAccessToken"),
         }),
       });
 
@@ -168,11 +217,19 @@ function App() {
   const FetchOutput = () => {
     if (output === "Generating Content...") {
       return (
+<<<<<<< HEAD
         <div class="row">
           <div class="col-md-2">
             <p class="loader"></p>
           </div>
           <div class="col-md-10">{output}</div>
+=======
+        <div class='row'>
+          <div class='col-md-2'>
+            <p class='loader'></p>
+          </div>
+          <div class='col-md-10'>{output}</div>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else if (output === "") {
@@ -180,20 +237,32 @@ function App() {
     } else if (output === "Push successful!") {
       return (
         <div>
+<<<<<<< HEAD
           {output} <i class="fa-solid fa-thumbs-up"></i>
+=======
+          {output} <i class='fa-solid fa-thumbs-up'></i>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else if (output === "Fetch successful!") {
       return (
         <div>
+<<<<<<< HEAD
           {output} <i class="fa-solid fa-thumbs-up"></i>
+=======
+          {output} <i class='fa-solid fa-thumbs-up'></i>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else {
       // all error case
       return (
         <div>
+<<<<<<< HEAD
           {output} <i class="fa-solid fa-bomb"></i>
+=======
+          {output} <i class='fa-solid fa-bomb'></i>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     }
@@ -204,13 +273,21 @@ function App() {
       return (
         <div>
           {cfOutput} Don't forget to refresh your Confluence{" "}
+<<<<<<< HEAD
           <i class="fa-solid fa-thumbs-up"></i>
+=======
+          <i class='fa-solid fa-thumbs-up'></i>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else {
       return (
         <div>
+<<<<<<< HEAD
           {cfOutput} <i class="fa-solid fa-bomb"></i>
+=======
+          {cfOutput} <i class='fa-solid fa-bomb'></i>
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     }
@@ -222,18 +299,25 @@ function App() {
       "push to confluence with access code",
       localStorage.getItem("confluenceAccessToken")
     );
+    handleCreateConfluence()
   };
 
   const CreateConfluenceButton = (
     <button
+<<<<<<< HEAD
       type="button"
       class="btn btn-dark mb-4"
+=======
+      type='button'
+      class='btn btn-dark mb-4'
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
       onClick={handleCreateConfluence}
     >
       Create Confluence Domain
     </button>
   );
 
+<<<<<<< HEAD
   const CreateConfluenceField = (
     <div>
       {docContent && output === "Fetch successful!" && (
@@ -291,6 +375,8 @@ function App() {
       )}
     </div>
   );
+=======
+>>>>>>> 824e79f (integrate oauth with api and update frontend)
 
   const LinkConfluenceButton = (
     <div>
@@ -301,7 +387,7 @@ function App() {
             type="button"
             class="btn btn-dark"
             onClick={handleConfluencePush}
-            disabled={!docContent}
+            disabled={!output}
           >
             Push to Confluence
           </button>
@@ -319,6 +405,60 @@ function App() {
       )}
     </div>
   );
+
+  const CreateConfluenceField = (
+    <div>
+      { (
+        // <div>
+        //   <div class="row mt-4 mb-4">
+        //   <div class="col-md">
+        //       <div class="form-floating">
+        //         <input type='text' value={confluenceDomain}
+        //             onChange={(e) => setConfluenceDomain(e.target.value)}
+        //             required
+        //             class="form-control"
+        //             id="confluence-domain">
+        //         </input>
+        //         <label for="confluence-domain">Confluence Domain</label>
+        //       </div>
+        //   </div>
+        //   <div class="col-md">
+        //     <div class="form-floating">
+        //         <input type='email' value={userEmail}
+        //             onChange={(e) => setUserEmail(e.target.value)}
+        //             required
+        //             class="form-control"
+        //             id="user-email">
+        //         </input>
+        //         <label for="user-email">Email</label>
+        //     </div>
+        //   </div>
+        // </div>
+
+        // <div class="row mb-4">
+        //     <div class="col form-floating">
+        //         <input type='text' value={apiToken}
+        //             onChange={(e) => setApiToken(e.target.value)}
+        //             required
+        //             class="form-control"
+        //             id="api-token">
+        //         </input>
+        //         <label for="api-token">API Token</label>
+        //     </div>
+        // </div>
+        <div>
+          {LinkConfluenceButton}
+          {/* {CreateConfluenceButton} */}
+          {cfOutput && (
+            <div class='fs-6'>
+              <CreateOutput />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
 
   const FetchRepoInputBox = (
     // <div class="border border-secondary-subtle rounded p-2">
@@ -461,6 +601,7 @@ function App() {
                                 localStorage.removeItem(
                                   "confluenceAccessToken"
                                 );
+                                localStorage.removeItem("confluenceCloudId");
                                 setRerender(!rerender);
                               }}
                             >

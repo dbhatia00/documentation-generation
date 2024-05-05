@@ -141,9 +141,19 @@ def get_confluence_token():
         headers = { 'Content-Type': 'application/json'}
 
         confluence_access_token_response = requests.post(get_access_token_url, json=params, headers=headers)
+        response_json = confluence_access_token_response.json() 
         
         if confluence_access_token_response.status_code == 200:
-            return jsonify(confluence_access_token_response.json()), 200
+            get_cloud_id_url = 'https://api.atlassian.com/oauth/token/accessible-resources'
+            headers = { 'Authorization': 'Bearer ' + response_json['access_token'], 
+                        'Accept': 'application/json',}
+            cloudid_response = requests.get(get_cloud_id_url, headers=headers)
+            
+            if confluence_access_token_response.status_code == 200:
+                return jsonify({'access_token': response_json['access_token'], 'cloud_id' : cloudid_response.json()[0]['id']}), 200
+            else:
+                return jsonify({'error': f'Failed to fetch confluence cloud id: {cloudid_response.text}'}), 500
+            
         else:
             return jsonify({'error': f'Failed to fetch confluence access token: {confluence_access_token_response.text}'}), 500
         
@@ -191,19 +201,23 @@ def create_confluence():
     repo_url = data.get("repo_url")
     email = data.get("email")
     api_token = data.get("api_token")
+    cloud_id = data.get("cloud_id")
+    confluence_access_code = data.get("confluence_access_code")
+    
+    
 
     # Check if the required data is provided
-    if not confluence_domain or not repo_url or not email or not api_token:
+    if not repo_url or not cloud_id or not confluence_access_code:
         # Return an error response if any of the required data is missing
         return jsonify({"error": "Please provide all variables"}), 400
-
-    auth = HTTPBasicAuth(email, api_token)
+    
+    print(cloud_id, confluence_access_code," --- test ")
 
     success = services.confluence.api.handle_repo_confluence_pages(
         repo_url=repo_url,
-        domain=confluence_domain,
         space_id=None,
-        auth=auth,
+        cloud_id=cloud_id,
+        confluence_access_code=confluence_access_code,
     )
 
     if not success:

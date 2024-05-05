@@ -16,10 +16,7 @@ export const linkToConfluenceAccount = () => {
   window.open(
     'https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=' +
       clientInfo.confluence_client_id +
-      '&scope=write%3Aconfluence-content%20read%3Aconfluence-space.summary%20write%3Aconfluence-space%20write%3Aconfluence-file%20read%3Aconfluence-props%20write%3Aconfluence-props%20manage%3Aconfluence-configuration%20read%3Aconfluence-content.all%20read%3Aconfluence-content.summary%20search%3Aconfluence%20read%3Aconfluence-content.permission%20read%3Aconfluence-user%20read%3Aconfluence-groups%20write%3Aconfluence-groups%20readonly%3Acontent.attachment%3Aconfluence' +
-      '&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F' +
-      '&state=confluence' +
-      '&response_type=code&prompt=consent'
+      '&scope=write%3Aspace.permission%3Aconfluence%20read%3Aspace.permission%3Aconfluence%20read%3Aspace%3Aconfluence%20read%3Aspace-details%3Aconfluence%20write%3Aspace%3Aconfluence%20delete%3Aspace%3Aconfluence%20read%3Aspace.property%3Aconfluence%20write%3Aspace.property%3Aconfluence%20read%3Apermission%3Aconfluence%20read%3Acontent%3Aconfluence%20write%3Acontent%3Aconfluence%20read%3Acontent-details%3Aconfluence%20delete%3Acontent%3Aconfluence%20read%3Apage%3Aconfluence%20write%3Apage%3Aconfluence%20delete%3Apage%3Aconfluence%20read%3Aattachment%3Aconfluence%20read%3Acustom-content%3Aconfluence%20write%3Acustom-content%3Aconfluence%20delete%3Acustom-content%3Aconfluence%20read%3Atemplate%3Aconfluence%20write%3Atemplate%3Aconfluence%20read%3Auser.property%3Aconfluence%20read%3Aspace.setting%3Aconfluence%20write%3Aspace.setting%3Aconfluence&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&state=confluence&response_type=code&prompt=consent'
   );
 };
 
@@ -63,6 +60,7 @@ export const getConfluenceAccessToken = async (
       .then((data) => {
         if (data.access_token) {
           localStorage.setItem('confluenceAccessToken', data.access_token);
+          localStorage.setItem('confluenceCloudId', data.cloud_id);
           setRerender(!rerender);
         }
       });
