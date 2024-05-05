@@ -14,9 +14,9 @@ export const loginWithClientId = () => {
 export const linkToConfluenceAccount = () => {
   // window.location.assign
   window.open(
-    'https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=' +
-      clientInfo.confluence_client_id +
-      '&scope=write%3Aspace.permission%3Aconfluence%20read%3Aspace.permission%3Aconfluence%20read%3Aspace%3Aconfluence%20read%3Aspace-details%3Aconfluence%20write%3Aspace%3Aconfluence%20delete%3Aspace%3Aconfluence%20read%3Aspace.property%3Aconfluence%20write%3Aspace.property%3Aconfluence%20read%3Apermission%3Aconfluence%20read%3Acontent%3Aconfluence%20write%3Acontent%3Aconfluence%20read%3Acontent-details%3Aconfluence%20delete%3Acontent%3Aconfluence%20read%3Apage%3Aconfluence%20write%3Apage%3Aconfluence%20delete%3Apage%3Aconfluence%20read%3Aattachment%3Aconfluence%20read%3Acustom-content%3Aconfluence%20write%3Acustom-content%3Aconfluence%20delete%3Acustom-content%3Aconfluence%20read%3Atemplate%3Aconfluence%20write%3Atemplate%3Aconfluence%20read%3Auser.property%3Aconfluence%20read%3Aspace.setting%3Aconfluence%20write%3Aspace.setting%3Aconfluence&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&state=confluence&response_type=code&prompt=consent'
+      "https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=" +
+          clientInfo.confluence_client_id +
+          "&scope=offline_access%20write%3Aspace.permission%3Aconfluence%20read%3Aspace.permission%3Aconfluence%20read%3Aspace%3Aconfluence%20read%3Aspace-details%3Aconfluence%20write%3Aspace%3Aconfluence%20delete%3Aspace%3Aconfluence%20read%3Aspace.property%3Aconfluence%20write%3Aspace.property%3Aconfluence%20read%3Apermission%3Aconfluence%20read%3Acontent%3Aconfluence%20write%3Acontent%3Aconfluence%20read%3Acontent-details%3Aconfluence%20delete%3Acontent%3Aconfluence%20read%3Apage%3Aconfluence%20write%3Apage%3Aconfluence%20delete%3Apage%3Aconfluence%20read%3Aattachment%3Aconfluence%20read%3Acustom-content%3Aconfluence%20write%3Acustom-content%3Aconfluence%20delete%3Acustom-content%3Aconfluence%20read%3Atemplate%3Aconfluence%20write%3Atemplate%3Aconfluence%20read%3Auser.property%3Aconfluence%20read%3Aspace.setting%3Aconfluence%20write%3Aspace.setting%3Aconfluence&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&state=confluence&response_type=code&prompt=consent"
   );
 };
 

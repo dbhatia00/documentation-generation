@@ -108,6 +108,7 @@ def retrieve_client_info():
     client_secret = str(tokens.get('client_secret'))
     return client_id, client_secret
 
+
 @app.route('/api/get_confluence_token', methods=['GET'])
 def get_confluence_token():
     """
@@ -149,12 +150,15 @@ def get_confluence_token():
                         'Accept': 'application/json',}
             cloudid_response = requests.get(get_cloud_id_url, headers=headers)
 
-            if confluence_access_token_response.status_code == 200:
+            if cloudid_response.status_code == 200:
+                refresh_token = response_json["refresh_token"]
+                cloud_id = cloudid_response.json()[0]["id"]
+                # TODO: add refresh token & cloud id to db
                 return (
                     jsonify(
                         {
                             "access_token": response_json["access_token"],
-                            "cloud_id": cloudid_response.json()[0]["id"],
+                            "cloud_id": cloud_id,
                             "site_url": cloudid_response.json()[0]["url"],
                         }
                     ),
@@ -168,7 +172,6 @@ def get_confluence_token():
 
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
 
 def retrieve_confluence_info():
     """
@@ -188,6 +191,44 @@ def retrieve_confluence_info():
     confluence_client_id = str(tokens.get('confluence_client_id'))
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
+
+
+def get_new_confluence_token(repo_url, cloud_id, refresh_token):
+    """
+    Retrieves a new Confluence access token for the provided repository URL and cloud ID. Also replaces the existing refresh token with the new one.
+
+    Args:
+        repo_url (str): The URL of the repository.
+        cloud_id (str): The ID of the Confluence site.
+
+    Returns:
+        str: The new Confluence access token, or None if the token retrieval fails.
+    """
+    # TODO: get refresh token from db (identified by repo_url + cloud_id combo), not from arguments
+    confluence_client_id, confluence_client_secret = retrieve_confluence_info()
+
+    params = {
+        "grant_type": "refresh_token",
+        "client_id": confluence_client_id,
+        "client_secret": confluence_client_secret,
+        "refresh_token": refresh_token,
+    }
+
+    refresh_token_url = "https://auth.atlassian.com/oauth/token"
+    headers = {"Content-Type": "application/json"}
+
+    refresh_token_response = requests.post(
+        refresh_token_url, json=params, headers=headers
+    )
+    response_json = refresh_token_response.json()
+
+    if refresh_token_response.status_code == 200:
+        new_refresh_token = response_json["refresh_token"]
+        new_access_token = response_json["access_token"]
+        # TODO: db for given cloud id, replace with new refresh token
+        return new_access_token
+    else:
+        return None
 
 
 @app.route("/api/create_confluence", methods=["POST"])
