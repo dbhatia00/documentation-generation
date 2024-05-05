@@ -1,9 +1,5 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
-=======
-import { BrowserRouter, Routes, Route } from "react-router-dom";
->>>>>>> 824e79f (integrate oauth with api and update frontend)
 import { ReactTyped } from "react-typed";
 import { useSpring, animated, config } from "@react-spring/web";
 import "./App.css";
@@ -13,53 +9,8 @@ import {
   getAccessToken,
   getConfluenceAccessToken,
 } from "./util/login";
-<<<<<<< HEAD
-
-const MainPageText = `
-  <div class="mainbg-text-title border-bottom pb-2 mb-3">Automated Codebase Documentation Generator</div>
-
-  <div class="mainbg-text-subtitle">Overview</div>
-  <div class="mainbg-text-content">Documentation is difficult to write and keep up to date. 
-  Tools exist to generate rudimentary JavaDoc for Java programs, but the result isn’t particularly helpful as it just gives parameter names and return types from the signature and no useful information. 
-  The goal of this project is to provide a more reasonable initial documentation source using LLMs and other tools, formatted and pushed out to your confluence space. </div>
-
-  <div class="mainbg-text-subtitle">Features</div>
-  <ul class="mainbg-text-content">
-  <li>Feature 1: Fetch your target repo from Github</li>
-  <li>Feature 2: Run our LLM on it to generate the documentation</li>
-  <li>Feature 3: Output the generated docs to Confluence</li>
-  </ul>
-  <div class="mainbg-text-subtitle">Using the Application</div>
-  <div class="mainbg-text-content">To use the application, please sign in to Github. Then, follow the instructions on the next page.</div>
-  <div class="mainbg-text-content">. . .</div>
-  `;
-
-const GithubLoggedInText = `
-  <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Login Success</div>
-
-  <div class="mainbg-text-subtitle">Fetch</div>
-  <div class="mainbg-text-content">Almost there! Using the {username}/{repo name} format, enter your Github repo name below and click fetch.</div>
-
-  <div class="mainbg-text-subtitle">Notes</div>
-  <ul class="mainbg-text-content">
-  <li>Please note that it takes some time to generate the documentation, depending on the size of the repository.</li>
-  <li>The application currently supports Python, Javascript, and Java projects.</li>
-  </ul>
-  <div class="mainbg-text-subtitle">Confluence Page</div>
-  <div class="mainbg-text-content">To use [Project Name] Please use the "Link to Confluence" button below to give us authorization for your confluence page, so that we can store the generated documents in your specified confluence space.</div>
-`;
-
-const CreateConfluenceText = `
-  <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Generated Successfully</div>
-
-  <div class="mainbg-text-subtitle">Confluence Page</div>
-  <div class="mainbg-text-content">Generation Complete! Please provide your email, Confluence domain, and API token. This way we can store your stuff in your Confluence so you can view and edit it!</div>
-
-`;
-=======
 import { MainPageText, GithubLoggedInText, CreateConfluenceText } from "./util/text";
 
->>>>>>> 824e79f (integrate oauth with api and update frontend)
 
 function App() {
   // State variables to store repository URL, doc content, and output messages
@@ -144,42 +95,6 @@ function App() {
     } catch (error) {
       console.error("Error:", error);
       setOutput("Failed to fetch doc");
-<<<<<<< HEAD
-=======
-    }
-  };
-
-  // Button to push edits to git
-  const handlePushEdits = async () => {
-    try {
-      // Send the updated text to the backend
-      const response = await fetch("/api/push_edits", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("accessToken"),
-        },
-        body: JSON.stringify({
-          repo_url: repoUrl,
-          doc_content: docContent,
-        }),
-      });
-
-      // Waits for a successful push from the backend
-      const data = await response.json();
-      if (response.ok) {
-        // Clear Input fields
-        setRepoUrl("");
-        setdocContent("");
-        setOutput("Push successful!");
-        console.log(data); // Log success message or handle as required
-      } else {
-        setOutput(data.error || "Failed to push edits");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setOutput("Failed to push edits");
->>>>>>> 824e79f (integrate oauth with api and update frontend)
     }
   };
 
@@ -217,19 +132,11 @@ function App() {
   const FetchOutput = () => {
     if (output === "Generating Content...") {
       return (
-<<<<<<< HEAD
         <div class="row">
           <div class="col-md-2">
             <p class="loader"></p>
           </div>
           <div class="col-md-10">{output}</div>
-=======
-        <div class='row'>
-          <div class='col-md-2'>
-            <p class='loader'></p>
-          </div>
-          <div class='col-md-10'>{output}</div>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else if (output === "") {
@@ -237,32 +144,20 @@ function App() {
     } else if (output === "Push successful!") {
       return (
         <div>
-<<<<<<< HEAD
           {output} <i class="fa-solid fa-thumbs-up"></i>
-=======
-          {output} <i class='fa-solid fa-thumbs-up'></i>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else if (output === "Fetch successful!") {
       return (
         <div>
-<<<<<<< HEAD
           {output} <i class="fa-solid fa-thumbs-up"></i>
-=======
-          {output} <i class='fa-solid fa-thumbs-up'></i>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else {
       // all error case
       return (
         <div>
-<<<<<<< HEAD
           {output} <i class="fa-solid fa-bomb"></i>
-=======
-          {output} <i class='fa-solid fa-bomb'></i>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     }
@@ -273,21 +168,13 @@ function App() {
       return (
         <div>
           {cfOutput} Don't forget to refresh your Confluence{" "}
-<<<<<<< HEAD
           <i class="fa-solid fa-thumbs-up"></i>
-=======
-          <i class='fa-solid fa-thumbs-up'></i>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     } else {
       return (
         <div>
-<<<<<<< HEAD
           {cfOutput} <i class="fa-solid fa-bomb"></i>
-=======
-          {cfOutput} <i class='fa-solid fa-bomb'></i>
->>>>>>> 824e79f (integrate oauth with api and update frontend)
         </div>
       );
     }
@@ -304,79 +191,14 @@ function App() {
 
   const CreateConfluenceButton = (
     <button
-<<<<<<< HEAD
       type="button"
       class="btn btn-dark mb-4"
-=======
-      type='button'
-      class='btn btn-dark mb-4'
->>>>>>> 824e79f (integrate oauth with api and update frontend)
       onClick={handleCreateConfluence}
     >
       Create Confluence Domain
     </button>
   );
 
-<<<<<<< HEAD
-  const CreateConfluenceField = (
-    <div>
-      {docContent && output === "Fetch successful!" && (
-        <div>
-          <div class="row mt-4 mb-4">
-            <div class="col-md">
-              <div class="form-floating">
-                <input
-                  type="text"
-                  value={confluenceDomain}
-                  onChange={(e) => setConfluenceDomain(e.target.value)}
-                  required
-                  class="form-control"
-                  id="confluence-domain"
-                ></input>
-                <label for="confluence-domain">Confluence Domain</label>
-              </div>
-            </div>
-            <div class="col-md">
-              <div class="form-floating">
-                <input
-                  type="email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  required
-                  class="form-control"
-                  id="user-email"
-                ></input>
-                <label for="user-email">Email</label>
-              </div>
-            </div>
-          </div>
-
-          <div class="row mb-4">
-            <div class="col form-floating">
-              <input
-                type="text"
-                value={apiToken}
-                onChange={(e) => setApiToken(e.target.value)}
-                required
-                class="form-control"
-                id="api-token"
-              ></input>
-              <label for="api-token">API Token</label>
-            </div>
-          </div>
-
-          {CreateConfluenceButton}
-          {cfOutput && (
-            <div class="fs-6">
-              <CreateOutput />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-=======
->>>>>>> 824e79f (integrate oauth with api and update frontend)
 
   const LinkConfluenceButton = (
     <div>
