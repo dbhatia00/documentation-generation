@@ -42,7 +42,7 @@ Our project is web app that, when provided a github link, generates a confluence
 3. Put file token_client.json under path react-fe/src
    1. Should be in the following format - 
   {
-    "client_id": "88ca09b0077cb16d7a39"
+    "client_id": "{your ID}"
   }
 
 ## Backend
