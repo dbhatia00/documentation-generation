@@ -9,7 +9,7 @@
   - [Files to create](#files-to-create)
   - [Backend](#backend)
   - [Frontend](#frontend)
-- [Test Instructions](#test-instructions)
+- [Automated Tests](#automated-tests)
   - [Frontend Tests](#frontend-tests)
   - [Backend Tests](#backend-tests)
 
@@ -30,8 +30,18 @@ Our project is web app that, when provided a github link, generates a confluence
 ## Files to create
 
 1. Download token_server.json and token_client.json from Slack
+   1. Alternatively, generate a set of tokens from the Github Api 
 2. Put file token_server.json under path flask-be
+   1. Should be in the following format - 
+  {
+    "client_id": "{your ID}",
+    "client_secret": "{your secret}"
+  }
 3. Put file token_client.json under path react-fe/src
+   1. Should be in the following format - 
+  {
+    "client_id": "88ca09b0077cb16d7a39"
+  }
 
 ## Backend
 
@@ -56,7 +66,7 @@ The backend should now be running
 
 The frontend should now be running
 
-# Test Instructions
+# Automated Tests
 
 There are a suite of tests to ensure that the frontend is rendered as expected, and the core backend functions work as expected. Refer to the below instructions for more.
 

@@ -18,7 +18,7 @@
 2. Output Structure
    1. The confluence pages shall follow the same file structure as the source code and shall have a one to one mapping. Each page shall describe the source code at the functional level, ensuring that the source code is covered to an acceptable level.
 3. Manual Editing
-   1. When the confluence page is displayed to the user, they will have the ability to manually update text within the Conlfuence webapp. 
+   1. When the confluence page is displayed to the user, they will have the ability to manually update text within the Confluence webapp. 
 4. Use of the LLM
    1. We will be implementing a Retrieval-Augmented Generation (RAG) backend. RAG is the process of optimizing the output of a large language model, so it references an authoritative knowledge base outside of its training data sources before generating a response. The Retrieval-Augmented Generation (RAG) approach enhances Large Language Models (LLMs) by integrating a step to fetch new data based on user inputs, thus improving response accuracy. This process involves collecting new information from diverse sources (a code base in our use case) and converting it into a format the LLM can search.
 5. Automated Updating
