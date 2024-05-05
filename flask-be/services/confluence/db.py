@@ -1,7 +1,17 @@
-from services.database.database import get_file_documentation, get_documentation_by_url
+from services.database.database import get_documentation_by_url
 
 
 def get_file_info(file):
+    """
+    Formats and returns information about a file.
+
+    Args:
+        file: The file object containing the information.
+
+    Returns:
+        A dictionary containing the file information, including the file path, overall summary,
+        packages, and functions.
+    """
     packages_dict = {}
     functions_dict = {}
     for name, package_detail in file.packages.items():
@@ -18,7 +28,6 @@ def get_file_info(file):
         }
 
     result = {
-        "page_id": None,
         "file_path": file.file_path,
         "file_details": {
             "overall_summary": file.overall_summary,
