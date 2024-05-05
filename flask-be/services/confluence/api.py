@@ -2,6 +2,7 @@ import services.confluence.db
 import services.confluence.formatter
 import requests
 import json
+import uuid
 
 
 def handle_repo_confluence_pages(
@@ -83,7 +84,11 @@ def _create_space(cloud_id, confluence_access_code, repo_name, commit_hash):
     """
     headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + confluence_access_code }
 
-    space_key = "".join([char for char in repo_name if char.isalnum()]) + commit_hash
+    space_key = (
+        "".join([char for char in repo_name if char.isalnum()])
+        + commit_hash
+        + uuid.uuid4().hex[:6]
+    )
     payload = json.dumps(
         {
             "name": repo_name + ": Auto Generated Documentation",

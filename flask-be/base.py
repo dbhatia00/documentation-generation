@@ -226,7 +226,7 @@ def create_confluence():
         repo_url=repo_url,
         cloud_id=cloud_id,
         confluence_access_code=confluence_access_code,
-        commit_hash="TEST",
+        commit_hash="REPLACE",
     )
 
     if not success:
