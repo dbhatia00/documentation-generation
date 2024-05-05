@@ -12,7 +12,7 @@ def get_overview_page_body(repo_overview):
                         "content": [
                             {
                                 "type": "text",
-                                "text": str(section_title).replace("_", " "),
+                                "text": str(section_title).replace("_", " ").title(),
                             }
                         ],
                     },
@@ -54,7 +54,7 @@ def _get_list_section_from_dict(title, info_dict):
             "content": [
                 {
                     "type": "text",
-                    "text": str(title).replace("_", " "),
+                    "text": str(title).replace("_", " ").title(),
                 }
             ],
         },
