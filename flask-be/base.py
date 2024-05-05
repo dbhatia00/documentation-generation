@@ -1,4 +1,3 @@
-# backend/app.py
 from flask import Flask, jsonify, request
 from requests.auth import HTTPBasicAuth
 import requests
@@ -9,14 +8,20 @@ import services.confluence.api
 from services.database.database import watch_mongodb_stream, start_llm_generation
 app = Flask(__name__)
 
-'''
-    DESCRIPTION -   A function to handle the get_doc button click
-    INPUTS -        Repository URL
-    OUTPUTS -       Repository doc or error
-    NOTES -         Outward facing (called from the Frontend)
-'''
 @app.route('/api/get_doc', methods=['POST'])
 def get_doc():
+    """
+    DESCRIPTION: A function to handle the get_doc button click.
+    
+    INPUTS:
+    - Repository URL
+    
+    OUTPUTS:
+    - Repository doc or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     # Extract JSON data from the request
     data = request.get_json()
 
@@ -45,124 +50,20 @@ def get_doc():
     return jsonify({'doc_content': database_response.model_dump()})
 
 
-'''
-    DESCRIPTION -   A function to handle the push to repo button click
-    INPUTS -        repo_url: Modified text from frontend
-    OUTPUTS -       Success message, a test_branch with the modified document
-    NOTES -         Outward facing (called from the Frontend)
-'''
-@app.route('/api/push_edits', methods=['POST'])
-def push_edits():
-    try:
-        # Extract JSON data from the request
-        data = request.get_json()
-
-        # Retrieve the repository URL and new doc content from the JSON data
-        repo_url = data.get('repo_url')
-        new_doc_content = data.get('doc_content')
-
-        # Check if the repository URL and new doc content are provided
-        if not repo_url or not new_doc_content:
-            # Return an error response if either the repository URL or new doc content is missing
-            return jsonify({'error': 'Please provide a GitHub repository URL and new doc content'}), 400
-        
-        # use github access token from oauth instead of the personal token for authorization
-        authorization_header = request.headers.get('Authorization')
-
-        # Construct the GitHub API URL to modify the doc file
-        api_url = f'https://api.github.com/repos/{repo_url}/contents/AUTOGEN-DOCUMENTATION.md'
-        
-        # Set headers for the GitHub API request
-        headers = {
-            'Authorization': authorization_header,
-            'Accept': 'application/vnd.github.v3+json'
-        }
-
-        # Check if the test branch exists
-        branch_url = f'https://api.github.com/repos/{repo_url}/branches/documentation-generation'
-        branch_response = requests.get(branch_url, headers=headers)
-
-        if branch_response.status_code == 404:
-            # Branch doesn't exist, create it
-            create_branch_url = f'https://api.github.com/repos/{repo_url}/git/refs'
-            mainSHA = getBranchSHA(repo_url, headers, "main")
-            create_branch_params = {
-                'ref': 'refs/heads/documentation-generation',
-                'sha': mainSHA
-            }
-            create_branch_response = requests.post(create_branch_url, headers=headers, json=create_branch_params)
-
-            if create_branch_response.status_code != 201:
-                return jsonify({'error': 'Failed to create branch'}), 500
-
-        # Depending on if the doc exists already, alter the params passed to the request
-        doc_url = f'https://api.github.com/repos/{repo_url}/contents/AUTOGEN-DOCUMENTATION.md?ref=documentation-generation'
-        doc_response = requests.get(doc_url, headers=headers)
-        if doc_response.status_code == 200:
-            doc_sha = doc_response.json().get('sha')
-            params = {
-                'message': 'Generated Documentation',
-                'content': base64.b64encode(new_doc_content.encode()).decode(),
-                'branch': 'documentation-generation',
-                'sha': doc_sha
-            }
-        else:
-            params = {
-                'message': 'Generated Documentation',
-                'content': base64.b64encode(new_doc_content.encode()).decode(),
-                'branch': 'documentation-generation',
-            }
-
-
-        # Push changes to the test branch
-        response = requests.put(api_url, headers=headers, json=params)
-
-        if response.status_code == 201:
-            # Return a success response if the file is created successfully
-            return jsonify({'success': 'Doc created successfully'}), 200
-        elif response.status_code == 200:
-            # Return a success response if the doc is updated successfully
-            return jsonify({'success': 'Doc updated successfully'}), 200
-        else:
-            # Return an error response if the file creation fails
-            return jsonify({'error': f'Failed to create file: {response.text}'}), 500
-    except Exception as e:
-        # Return an error response if an exception occurs
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
-
-"""
-    DESCRIPTION -   Retrieve the SHA of the latest commit on the specified branch of the GitHub repository.
-
-    INPUTS -        repo_url: The URL of the GitHub repository.
-                    headers: Headers containing the authorization token for making GitHub API requests.
-                    branch: The name of the branch for which to retrieve the SHA.
-    OUTPUTS -       The SHA of the latest commit on the specified branch, or an error message if retrieval fails.
-    NOTES -         Helper function, local to this file
-"""
-def getBranchSHA(repo_url, headers, branch):
-    # Construct the URL to fetch information about the specified branch
-    branch_url = f'https://api.github.com/repos/{repo_url}/branches/{branch}'
-
-    # Send a GET request to retrieve branch information
-    branch_response = requests.get(branch_url, headers=headers)
-
-    # Check the response status code
-    if branch_response.status_code == 200:
-        # Extract branch data from the response
-        branch_data = branch_response.json()
-
-        # Retrieve the SHA of the latest commit on the specified branch
-        sha_of_latest_commit = branch_data['commit']['sha']
-
-        # Convert the SHA to a string and return it
-        return str(sha_of_latest_commit)
-    else:
-        # Return an error message if retrieval fails
-        return jsonify({'error': f'Failed to retrieve SHA of latest commit on {branch} branch'}), 500
-
 @app.route('/api/get_access_token', methods=['GET'])
 def get_access_token():
+    """
+    DESCRIPTION: A function to get the access token from GitHub.
+    
+    INPUTS:
+    - None
+    
+    OUTPUTS:
+    - Access token or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     try:
         # Extract client code from frontend
         client_code = request.args.get('code')
@@ -188,6 +89,18 @@ def get_access_token():
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 def retrieve_client_info(): 
+    """
+    DESCRIPTION: Retrieve GitHub client ID and client secret from a JSON file named 'token_server.json'.
+
+    INPUTS:
+    - None
+
+    OUTPUTS:
+    - Tuple containing client ID and client secret (both as strings).
+
+    NOTES:
+    - Internal helper function
+    """
     # Retrieve GitHub token from a JSON file
     with open('token_server.json') as f:
         tokens = json.load(f)
@@ -197,6 +110,18 @@ def retrieve_client_info():
 
 @app.route('/api/get_confluence_token', methods=['GET'])
 def get_confluence_token():
+    """
+    DESCRIPTION: A function to get the Confluence access token.
+    
+    INPUTS:
+    - None
+    
+    OUTPUTS:
+    - Confluence access token or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     try:
         client_code = request.args.get('code')
         if not client_code:
@@ -227,20 +152,39 @@ def get_confluence_token():
         
     
 def retrieve_confluence_info():
+    """
+    DESCRIPTION: Retrieve Confluence client ID and client secret from a JSON file named 'token_server.json'.
+
+    INPUTS:
+    - None
+
+    OUTPUTS:
+    - Tuple containing Confluence client ID and client secret (both as strings).
+
+    NOTES:
+    - Internal Helper function
+    """
     with open('token_server.json') as f:
         tokens = json.load(f)
     confluence_client_id = str(tokens.get('confluence_client_id'))
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
 
-"""
-    DESCRIPTION -   A function that creates a confluence space and pages for a given repository
-    INPUTS -        Repository URL, confluence domain, email, api token
-    OUTPUTS -       Message of success or error
-    NOTES -         Outward facing (called from the Frontend)
-"""
+
 @app.route("/api/create_confluence", methods=["POST"])
 def create_confluence():
+    """
+    DESCRIPTION: A function that creates a Confluence space and pages for a given repository.
+    
+    INPUTS:
+    - Repository URL, confluence domain, email, api token
+    
+    OUTPUTS:
+    - Message of success or error
+    
+    NOTES:
+    - Outward facing (called from the Frontend)
+    """
     # Extract data from the request
     data = request.get_json()
     confluence_domain = data.get("confluence_domain")
