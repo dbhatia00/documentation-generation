@@ -189,27 +189,16 @@ def retrieve_confluence_info():
     confluence_client_secret = str(tokens.get('confluence_client_secret'))
     return confluence_client_id, confluence_client_secret
 
-"""
+
+@app.route("/api/create_confluence", methods=["POST"])
+def create_confluence():
+    """
     DESCRIPTION -   A function that creates a confluence space and pages for a given repository
     INPUTS -        repo_url: The URL of the repository.
                     cloud_id: The ID of the Confluence cloud.
                     confluence_access_code: The access code for Confluence API.
-    OUTPUTS -       Message of success or error.
+    OUTPUTS -       If successful, returns the space key of the created space. If unsuccessful, returns an error message.
     NOTES -         Outward facing (called from the Frontend).
-"""
-@app.route("/api/create_confluence", methods=["POST"])
-def create_confluence():
-    """
-    DESCRIPTION: A function that creates a Confluence space and pages for a given repository.
-    
-    INPUTS:
-    - Repository URL, confluence domain, email, api token
-    
-    OUTPUTS:
-    - Message of success or error
-    
-    NOTES:
-    - Outward facing (called from the Frontend)
     """
     # Extract data from the request
     data = request.get_json()
