@@ -19,6 +19,8 @@
 
 Documentation is difficult to write and keep up to date. Tools exist to generate rudimentary JavaDoc for Java programs, but the result isn’t particularly helpful as it just gives parameter names and return types from the signature and no useful information. The goal of this project is to provide a more reasonable initial documentation source using LLMs and other tools.
 
+For more detailed descriptions of our design, please visit [our documentation directory](https://github.com/dbhatia00/documentation-generation/tree/main/documentation).
+
 ## Initial Implementation Goals
 
 ### Description
