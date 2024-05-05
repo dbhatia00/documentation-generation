@@ -150,7 +150,16 @@ def get_confluence_token():
             cloudid_response = requests.get(get_cloud_id_url, headers=headers)
 
             if confluence_access_token_response.status_code == 200:
-                return jsonify({'access_token': response_json['access_token'], 'cloud_id' : cloudid_response.json()[0]['id']}), 200
+                return (
+                    jsonify(
+                        {
+                            "access_token": response_json["access_token"],
+                            "cloud_id": cloudid_response.json()[0]["id"],
+                            "site_url": cloudid_response.json()[0]["url"],
+                        }
+                    ),
+                    200,
+                )
             else:
                 return jsonify({'error': f'Failed to fetch confluence cloud id: {cloudid_response.text}'}), 500
 
@@ -213,7 +222,7 @@ def create_confluence():
         # Return an error response if any of the required data is missing
         return jsonify({"error": "Please provide all variables"}), 400
 
-    success = services.confluence.api.handle_repo_confluence_pages(
+    success, space_key = services.confluence.api.handle_repo_confluence_pages(
         repo_url=repo_url,
         cloud_id=cloud_id,
         confluence_access_code=confluence_access_code,
@@ -224,7 +233,14 @@ def create_confluence():
         # Return an error response if the update fails
         return jsonify({"error": "Failed to update Confluence pages"}), 500
     else:
-        return jsonify({"success": "Confluence pages updated successfully"}), 200
+        return (
+            jsonify(
+                {
+                    "spaceKey": space_key,
+                }
+            ),
+            200,
+        )
 
 
 if __name__ == '__main__':

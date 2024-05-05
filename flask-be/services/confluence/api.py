@@ -17,11 +17,13 @@ def handle_repo_confluence_pages(
         commit_hash (str): The commit hash of the repository.
 
     Returns:
-        bool: True if all pages were successfully updated, False otherwise.
+        tuple: A tuple containing the success status and the space key.
+            - success (bool): True if the documentation generation and upload to Confluence was successful, False otherwise.
+            - space_key (str): The key of the Confluence space where the documentation was uploaded. None if the documentation generation was unsuccessful.
     """
     repo_info = services.confluence.db.get_repo_info(repo_url=repo_url)
     if repo_info is None:
-        return False
+        return False, None
 
     # create new space
     # TODO: construct space URL from space_key and return to front-end
@@ -34,7 +36,7 @@ def handle_repo_confluence_pages(
     # unsuccessful space creation
     if space_key is None or space_id is None:
         print("confluence.api.handle_repo_confluence_pages: _create_space failed")
-        return False
+        return False, None
 
     # update the home page of the space with the repo summary
     success = update_home_page(
@@ -45,7 +47,7 @@ def handle_repo_confluence_pages(
     )
     if success is False:
         print("confluence.api.handle_repo_confluence_pages: update_home_page failed")
-        return False
+        return False, None
 
     # create a new page or update an existing page for each file in the repo
     for file_info in repo_info["file_info_list"]:
@@ -59,11 +61,11 @@ def handle_repo_confluence_pages(
             print(
                 f"confluence.api.handle_repo_confluence_pages: handle_file_confluence_page failed for {file_info['file_path']}"
             )
-            return False
+            return False, None
 
-    # TODO: ideally, confluence page hierarchy should reflect structure of directories in repo - need corresponding structures in LLM output
+    # TODO: ideally, confluence page hierarchy should reflect structure of directories in repo - parse file paths to determine hierarchy
 
-    return True
+    return True, space_key
 
 
 def _create_space(cloud_id, confluence_access_code, repo_name, commit_hash):
