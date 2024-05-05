@@ -1,19 +1,23 @@
 export const MainPageText = `
-  <div class="mainbg-text-title border-bottom pb-2 mb-3">Project Name</div>
+  <div class="mainbg-text-title border-bottom pb-2 mb-3">Automated Codebase Documentation Generator</div>
 
   <div class="mainbg-text-subtitle">Overview</div>
-  <div class="mainbg-text-content">[Project Name] is an open-source Java library aimed at [brief description of the library's purpose or main functionality].</div>
+  <div class="mainbg-text-content">Documentation is difficult to write and keep up to date. 
+  Tools exist to generate rudimentary JavaDoc for Java programs, but the result isn’t particularly helpful as it just gives parameter names and return types from the signature and no useful information. 
+  The goal of this project is to provide a more reasonable initial documentation source using LLMs and other tools, formatted and pushed out to your confluence space. </div>
 
   <div class="mainbg-text-subtitle">Features</div>
   <ul class="mainbg-text-content">
-  <li>Feature 1: Description of feature 1.</li>
-  <li>Feature 2: Description of feature 2.</li>
-  <li>Feature 3: Description of feature 3.</li>
+  <li>Feature 1: Fetch your target repo from Github</li>
+  <li>Feature 2: Run our LLM on it to generate the documentation</li>
+  <li>Feature 3: Output the generated docs to Confluence</li>
   </ul>
-  <div class="mainbg-text-subtitle">Installation</div>
-  <div class="mainbg-text-content">To use [Project Name] in your Java project, you can include it as a dependency in your build configuration. If you're using Maven, add the following dependency to your 'pom.xml'</div>
+  <div class="mainbg-text-subtitle">Using the Application</div>
+  <div class="mainbg-text-content">To use the application, please sign in to Github and Confluence. Then, follow the instructions on the next page.</div>
+  <div class="mainbg-text-subtitle">Confluence Page</div>
+  <div class="mainbg-text-content">Our generated documentation will be stroed in your Confluence as a new sapce. Please use the "Link to Confluence" button below to give us authorization for your confluence page.</div>
   <div class="mainbg-text-content">. . .</div>
-  `;
+`;
 
 export const GithubLoggedInText = `
   <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Login Success</div>
@@ -21,19 +25,9 @@ export const GithubLoggedInText = `
   <div class="mainbg-text-subtitle">Fetch</div>
   <div class="mainbg-text-content">Almost there! Using the {username}/{repo name} format, enter your Github repo name below and click fetch.</div>
 
-  <div class="mainbg-text-subtitle">Times</div>
+  <div class="mainbg-text-subtitle">Notes</div>
   <ul class="mainbg-text-content">
-  <li>Please note that it takes some time to generate the documentation</li>
-  <li>One moment, please :)</li>
+  <li>Please note that it takes some time to generate the documentation, depending on the size of the repository.</li>
+  <li>The application currently supports Python, Javascript, and Java projects.</li>
   </ul>
-  <div class="mainbg-text-subtitle">Confluence Page</div>
-  <div class="mainbg-text-content">To use [Project Name] Please use the "Link to Confluence" button below to give us authorization for your confluence page, so that we can store the generated documents in your confluence.</div>
-`;
-
-export const CreateConfluenceText = `
-  <div class="mainbg-text-title col-md border-bottom pb-2 mb-3">Generated Successfully</div>
-
-  <div class="mainbg-text-subtitle">Confluence Page</div>
-  <div class="mainbg-text-content">Here we go! Please provide your email, Confluence domain, and API token. This way we can store your stuff in your Confluence so you can view and edit it!</div>
-
 `;

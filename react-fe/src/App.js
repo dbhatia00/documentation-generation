@@ -77,7 +77,7 @@ function App() {
 
   const handleCreateConfluence = async () => {
     try {
-      setCfOutput("Creating Confluence Space..."); 
+      setCfOutput("Creating Confluence Space...");
       const response = await fetch("/api/create_confluence", {
         method: "POST",
         headers: {
