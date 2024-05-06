@@ -25,7 +25,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 @app.route("/api/get_doc", methods=["POST"])
-@app.route("/api/get_doc", methods=["POST"])
 def get_doc():
     """
     DESCRIPTION: A function to handle the get_doc button click.
@@ -205,7 +204,6 @@ def getBranchSHA(repo_url, headers, branch):
         )
 
 
-@app.route("/api/get_access_token", methods=["GET"])
 @app.route("/api/get_access_token", methods=["GET"])
 def get_access_token():
     """
