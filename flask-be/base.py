@@ -8,6 +8,7 @@ import base64
 import json
 import services.confluence.api
 import logging
+from urllib.parse import urlparse
 
 
 from services.database.database import watch_mongodb_stream, start_llm_generation
@@ -466,6 +467,18 @@ def handle_webhook():
     # Process the payload
     payload = request.json
     # Check if the 'ref' key is in the payload
+    if "repository" in payload and "html_url" in payload["repository"]:
+        repo_url = payload["repository"]["html_url"]
+        logging.info(f"Received a webhook for repository: {repo_url}")
+        parsed_url = urlparse(repo_url)
+        path_parts = parsed_url.path.strip("/").split("/")
+        repo_url = "/".join(path_parts[-2:])
+        logging.info(f"now repository url: {repo_url}")
+    else:
+        return (
+            jsonify({"message": "Invalid payload format, missing repository URL"}),
+            400,
+        )
     if "ref" not in payload:
         return jsonify({"message": f"No ref key in payload{payload}"}), 400
     if payload["ref"] == "refs/heads/main":
@@ -475,6 +488,12 @@ def handle_webhook():
             logging.info(f"Commit ID: {commit['id']}")
             logging.info(f"Commit message: {commit['message']}")
             # Additional processing here if needed
+            # Directly call the documentation generation function
+            result, status = generate_documentation(repo_url)
+            if status == 200:
+                logging.info("LLM document generation successful.")
+            else:
+                logging.error("LLM document generation failed.")
 
     return "OK", 200
 
@@ -557,6 +576,27 @@ def create_webhook(
     }
     response = requests.post(url, json=data, headers=headers)
     return response.json()
+
+
+def generate_documentation(repo_url):
+    """
+    Generate documentation for the given repository URL.
+    """
+    api_url = f"https://api.github.com/repos/{repo_url}/contents/"
+    response = requests.get(api_url)
+
+    if response.status_code != 200:
+        return {"error": "Failed to fetch source code from GitHub"}, 500
+
+    repo_url = "https://github.com/" + repo_url
+    url_to_process_repo = f"https://bjxdbdicckttmzhrhnpl342k2q0pcthx.lambda-url.us-east-1.on.aws/?repo_url={repo_url}"
+
+    start_llm_generation(repo_url)
+    requests.get(url_to_process_repo)
+
+    database_response = watch_mongodb_stream(repo_url)
+
+    return {"doc_content": database_response.model_dump()}, 200
 
 
 if __name__ == "__main__":
