@@ -90,8 +90,7 @@ function App() {
           repo_url: "https://github.com/" + repoUrl,
           cloud_id: localStorage.getItem("confluenceCloudId"),
           confluence_access_code: localStorage.getItem("confluenceAccessToken"),
-          // TODO: remove the following commit to pass the commit hash in request body
-          // commit_hash: commitHash,
+          commit_hash: commitHash,
         }),
       });
 
@@ -166,7 +165,7 @@ function App() {
       class="btn btn-dark mb-4"
       onClick={handleCreateConfluence}
     >
-      Create Confluence Domain
+      Push to a new Confluence space
     </button>
   );
 

@@ -254,6 +254,7 @@ def create_confluence():
     repo_url = data.get("repo_url")
     cloud_id = data.get("cloud_id")
     confluence_access_code = data.get("confluence_access_code")
+    commit_hash = data.get("commit_hash")
 
     # Check if the required data is provided
     if not repo_url or not cloud_id or not confluence_access_code:
@@ -264,7 +265,7 @@ def create_confluence():
         repo_url=repo_url,
         cloud_id=cloud_id,
         confluence_access_code=confluence_access_code,
-        commit_hash="REPLACE",
+        commit_hash=commit_hash,
     )
 
     if not success:
