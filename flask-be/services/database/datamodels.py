@@ -137,7 +137,6 @@ def external_json_to_respsitory_confluence_output(json_data: dict) -> Repository
         file_object = external_json_to_file_confluence_output({file_path : file_data})
         file_path = file_path.replace(".", "_")
         formatted_json["files"][file_path] = file_object
-    print(formatted_json)
     return RepositoryConfluenceOutput(**formatted_json)
 
 def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOutput:
@@ -164,7 +163,6 @@ def external_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
         functions[function_name] = FunctionDetail(**function_data)
     formatted_json["packages"] = packages
     formatted_json["functions"] = functions
-    print(formatted_json)
     return FileConfluenceOutput(**formatted_json)
 
 def database_json_to_respsitory_confluence_output(json_data: dict) -> RepositoryConfluenceOutput:
@@ -190,7 +188,6 @@ def database_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     for file_path, file_data in files.items():
         replacement_file_name = file_path.replace("_", ".")
         file_data["file_path"] = replacement_file_name
-        print("Now the file path is", file_data["file_path"])
         packages = file_data.get("packages", {})
         functions = file_data.get("functions", {})
         for package_name, package_data in packages.items():
@@ -225,5 +222,4 @@ def database_json_to_file_confluence_output(json_data: dict) -> FileConfluenceOu
         functions[function_name] = FunctionDetail(**function_data)
     formatted_json["packages"] = packages
     formatted_json["functions"] = functions
-    print(formatted_json)
     return FileConfluenceOutput(**formatted_json)

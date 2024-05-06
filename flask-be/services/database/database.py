@@ -21,7 +21,7 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 from typing import Optional
-from services.database.datamodels import (
+from datamodels import (
     RepositoryConfluenceOutput,
     FileConfluenceOutput,
     Status,
@@ -180,6 +180,9 @@ def start_llm_generation(repository_url: str) -> InsertOneResult:
     Returns:
     - The result of the update operation.
     """
+    if(get_documentation_by_url(repository_url)):
+        delete_documentation_by_url(repository_url)
+        delete_status_by_url(repository_url)
     status_obj = Status(repository_url=repository_url, overall_status="In progress")
     result = db["status"].insert_one(status_obj.model_dump())
     return result
@@ -213,7 +216,6 @@ def start_file_processing(repository_url, file_name):
     """
     file_name = file_name.replace('.', '_')
     if(db["status"].find_one({"repository_url": repository_url}) is None):
-        print("Not found")
         start_llm_generation(repository_url)
     result = db["status"].update_one(
         {"repository_url": repository_url},
@@ -282,7 +284,18 @@ def get_status_by_file(repository_url, file_name):
     # Return None if the file status is not found.
     return None
 
+def delete_status_by_url(repository_url: str) -> DeleteResult:
+    """
+    Deletes the status document for a repository.
 
+    Parameters:
+    - repository_url (str): The URL of the repository to delete.
+
+    Returns:
+    - The result of the delete operation.
+    """
+    result = db["status"].delete_one({"repository_url": repository_url})
+    return result
 
 def watch_mongodb_stream(repository_url):
     result = db["status"].find_one({"repository_url": repository_url}, {"_id": 1})
