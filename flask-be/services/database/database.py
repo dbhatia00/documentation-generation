@@ -21,7 +21,7 @@ Example Usage:
 To use these functions, ensure that the database URI is correctly specified in the DATABASE_URI variable.
 """
 from typing import Optional
-from datamodels import (
+from services.database.datamodels import (
     RepositoryConfluenceOutput,
     FileConfluenceOutput,
     Status,
@@ -169,7 +169,7 @@ def delete_file_from_documentation(repository_url: str, file_key: str) -> Update
     )
     return result
 
-#STATUS OPERATIONS
+# STATUS OPERATIONS
 def start_llm_generation(repository_url: str) -> InsertOneResult:
     """
     Updates the status of the llm generation process to "In progress".
