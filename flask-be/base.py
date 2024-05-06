@@ -35,9 +35,17 @@ def get_doc():
 
     api_url = f'https://api.github.com/repos/{repo_url}/contents/'
     response = requests.get(api_url)
-
+    
     if response.status_code != 200:
         return jsonify({'error': 'Failed to fetch source code from GitHub'}), 500
+    
+    commit_hash_url = f"https://api.github.com/repos/{repo_url}/commits"
+    commit_hash_response = requests.get(commit_hash_url)
+    
+    commit_hash = commit_hash_response.json()[0]["sha"]
+    
+    if commit_hash_response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch commit hash from GitHub'}), 500
     
     repo_url = "https://github.com/" + repo_url
     url_to_process_repo = f"https://bjxdbdicckttmzhrhnpl342k2q0pcthx.lambda-url.us-east-1.on.aws/?repo_url={repo_url}"
@@ -47,7 +55,7 @@ def get_doc():
 
     database_response = watch_mongodb_stream(repo_url)
     
-    return jsonify({'doc_content': database_response.model_dump()})
+    return jsonify({'doc_content': database_response.model_dump(), 'commit_hash': commit_hash}), 200
 
 
 @app.route('/api/get_access_token', methods=['GET'])

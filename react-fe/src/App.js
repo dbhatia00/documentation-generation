@@ -22,6 +22,7 @@ function App() {
   const [output, setOutput] = useState("");
   const [cfOutput, setCfOutput] = useState("");
   const [rerender, setRerender] = useState(false);
+  const [commitHash, setCommitHash] = useState("");
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -65,6 +66,8 @@ function App() {
       const data = await response.json();
       if (response.ok) {
         setdocContent(data.doc_content); // Decode base64 content
+        setCommitHash(data.commit_hash);
+        console.log(commitHash)
         setOutput("Fetch successful!");
       } else {
         setOutput(data.error || "Failed to fetch doc");
@@ -87,6 +90,8 @@ function App() {
           repo_url: "https://github.com/" + repoUrl,
           cloud_id: localStorage.getItem("confluenceCloudId"),
           confluence_access_code: localStorage.getItem("confluenceAccessToken"),
+          // TODO: remove the following commit to pass the commit hash in request body
+          // commit_hash: commitHash,
         }),
       });
 
