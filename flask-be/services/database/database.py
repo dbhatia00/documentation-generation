@@ -25,6 +25,7 @@ from datamodels import (
     RepositoryConfluenceOutput,
     FileConfluenceOutput,
     Status,
+    ConfluenceOAuth,
     database_json_to_respsitory_confluence_output,
 )
 
@@ -237,6 +238,59 @@ def complete_file_processing(repository_url, file_name):
     result = db["status"].update_one(
         {"repository_url": repository_url},
         {"$set": {f"file_level_status.{file_name}": "Completed"}}
+    )
+    return result
+
+def get_refresh_token(repository_url):
+    """
+    Retrieves the refresh token for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to find.
+
+    Returns:
+    - str or None: Returns the refresh token if found, otherwise None.
+    """
+    result = collection.find_one({"repository_url": repository_url}, {"_id": 0, "confluence_oauth.refresh_token": 1})
+    if result:
+        return result.get("confluence_oauth", {}).get("refresh_token")
+    return None
+
+def update_refresh_token(repository_url, refresh_token):
+    """
+    Updates the refresh token for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - refresh_token (str): The new refresh token to set.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": {
+            "confluence_oauth.refresh_token": refresh_token
+        }}
+    )
+    return result
+
+def put_confluence_oauth(repository_url, confluence_oauth):
+    """
+    Updates the confluence oauth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - confluence_oauth (dict): The new confluence oauth to set.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": {
+            "confluence_oauth": confluence_oauth.model_dump()
+        }}
     )
     return result
 
