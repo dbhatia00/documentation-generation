@@ -70,8 +70,6 @@ def parallel_process_files(files, repo_url, repo_name):
                 data_dict[file.metadata['file_path']] = data
             except Exception as exc:
                 print(f'{file.metadata["file_path"]} generated an exception: {exc}')
-    
-    # complete_llm_generation(repo_url)
                 
     return data_dict
 
@@ -89,8 +87,7 @@ def download_and_process_repo_url(repo_url, supported_languages = ['python', 'ja
     data_dict             = parallel_process_files(files, repo_url, repo_name)
     
     repo_overview         = process_and_add_repo_overview_to_db(repo_url, str(data_dict))
-    
-    complete_llm_generation(repo_url)
+
     
     if os.path.exists(local_repo_dir):
         shutil.rmtree(local_repo_dir)
