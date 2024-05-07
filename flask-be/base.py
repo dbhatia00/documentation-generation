@@ -11,7 +11,12 @@ import logging
 from urllib.parse import urlparse
 
 
-from services.database.database import watch_mongodb_stream, start_llm_generation
+from services.database.database import (
+    watch_mongodb_stream,
+    start_llm_generation,
+    get_all_tokens,
+    update_single_confluence_oauth,
+)
 
 app = Flask(__name__)
 dotenv.load_dotenv()
@@ -146,7 +151,7 @@ def retrieve_client_info():
     return client_id, client_secret
 
 
-@app.route('/api/get_confluence_token', methods=['GET'])
+@app.route("/api/get_confluence_token", methods=["POST"])
 def get_confluence_token():
     """
     DESCRIPTION: A function to get the Confluence access token.
@@ -161,7 +166,9 @@ def get_confluence_token():
     - Outward facing (called from the Frontend)
     """
     try:
-        client_code = request.args.get('code')
+        data = request.get_json()
+        client_code = data.get("code")
+        repo_url = data.get("repo_url")
         if not client_code:
             return jsonify({'error': 'Login error with Confluence'}), 400
 
@@ -190,7 +197,12 @@ def get_confluence_token():
             if cloudid_response.status_code == 200:
                 refresh_token = response_json["refresh_token"]
                 cloud_id = cloudid_response.json()[0]["id"]
-                # TODO: add refresh token & cloud id to db
+                # adds {cloud_id: refresh_token} to db for repo_url
+                update_single_confluence_oauth(
+                    repository_url=repo_url,
+                    confluence_site_cloud_id=cloud_id,
+                    refresh_token=refresh_token,
+                )
                 return (
                     jsonify(
                         {
@@ -231,7 +243,7 @@ def retrieve_confluence_info():
     return confluence_client_id, confluence_client_secret
 
 
-def get_new_confluence_token(repo_url, cloud_id, refresh_token):
+def get_new_confluence_token(refresh_token, repo_url, cloud_id):
     """
     Retrieves a new Confluence access token for the provided repository URL and cloud ID. Also replaces the existing refresh token with the new one.
 
@@ -242,7 +254,6 @@ def get_new_confluence_token(repo_url, cloud_id, refresh_token):
     Returns:
         str: The new Confluence access token, or None if the token retrieval fails.
     """
-    # TODO: get refresh token from db (identified by repo_url + cloud_id combo), not from arguments
     confluence_client_id, confluence_client_secret = retrieve_confluence_info()
 
     params = {
@@ -263,7 +274,12 @@ def get_new_confluence_token(repo_url, cloud_id, refresh_token):
     if refresh_token_response.status_code == 200:
         new_refresh_token = response_json["refresh_token"]
         new_access_token = response_json["access_token"]
-        # TODO: db for given cloud id, replace with new refresh token
+        # db: replace with new refresh token
+        update_single_confluence_oauth(
+            repository_url=repo_url,
+            refresh_token=new_refresh_token,
+            confluence_site_cloud_id=cloud_id,
+        )
         return new_access_token
     else:
         return None
@@ -312,7 +328,6 @@ def create_confluence():
         )
 
 
-
 # Your webhook secret, which you must set both here and in your GitHub webhook settings
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "default_secret_if_not_set")
 
@@ -351,11 +366,12 @@ def handle_webhook():
             jsonify({"message": "Invalid payload format, missing repository URL"}),
             400,
         )
-    
+
     # error in payload, quit before regeneration attempt
     if "ref" not in payload:
         return jsonify({"message": f"No ref key in payload{payload}"}), 400
-    
+
+    # TODO: should we return 500 error when any of the regeneration steps fail?
     if payload["ref"] == "refs/heads/main":
         logging.info("New commit to main branch detected.")
         for commit in payload["commits"]:
@@ -369,9 +385,34 @@ def handle_webhook():
                 logging.info("LLM document generation successful.")
             else:
                 logging.error("LLM document generation failed.")
+            '''
+            # Generate the confluence space for each registered confluence site
+            commit_hash = get_latest_commit_hash(repo_url)
+            if commit_hash is None:
+                logging.error("Failed to fetch commit hash from GitHub")
 
-            # Generate the confluence page
-
+            tokens_dict = get_all_tokens(repo_url)
+            for cloud_id, refresh_token in tokens_dict.items():
+                confluence_access_code = get_new_confluence_token(
+                    refresh_token=refresh_token,
+                    repo_url=repo_url,
+                    cloud_id=cloud_id,
+                )
+                success, space_key = (
+                    services.confluence.api.handle_repo_confluence_pages(
+                        repo_url=repo_url,
+                        cloud_id=cloud_id,
+                        confluence_access_code=confluence_access_code,
+                        commit_hash=commit_hash,
+                    )
+                )
+                if not success:
+                    logging.error("Failed to update Confluence pages")
+                else:
+                    logging.info(
+                        f"Confluence pages updated successfully. Site: {cloud_id}, Space key: {space_key}"
+                    )
+                '''
     return "OK", 200
 
 

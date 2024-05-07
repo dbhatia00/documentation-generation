@@ -13,9 +13,9 @@ export const MainPageText = `
   <li>Feature 3: Output the generated docs to Confluence</li>
   </ul>
   <div class="mainbg-text-subtitle">Using the Application</div>
-  <div class="mainbg-text-content">To use the application, please sign in to Github and Confluence. Then, follow the instructions on the next page.</div>
+  <div class="mainbg-text-content">To use the application, please sign in to Github. Then, follow the instructions on the next page.</div>
   <div class="mainbg-text-subtitle">Confluence Page</div>
-  <div class="mainbg-text-content">Our generated documentation will be stored in your Confluence as a new space. Please use the "Link to Confluence" button below to give us authorization for your confluence page.</div>
+  <div class="mainbg-text-content">Our generated documentation will be stored in your Confluence as a new space once you are logged in.</div>
   <div class="mainbg-text-content">. . .</div>
 `;
 
