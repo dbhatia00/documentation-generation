@@ -240,6 +240,57 @@ def complete_file_processing(repository_url, file_name):
     )
     return result
 
+def get_all_tokens(repository_url):
+    """
+    Retrieves the confluence oauth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to find.
+
+    Returns:
+    - dict or None: Returns the confluence oauth if found, otherwise None.
+    """
+    result = collection.find_one({"repository_url": repository_url}, {"_id": 0, "confluence_oauth": 1})
+    if result:
+        return result.get("confluence_oauth")
+    return None
+
+def update_single_confluence_oauth(repository_url, confluence_site_cloud_id, refresh_token):
+    """
+    Updates the Confluence OAuth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - confluence_site_cloud_id (str): The cloud id of the Confluence site.
+    - refresh_token (str): The new refresh token to set.
+    - db_collection: The collection object representing the database collection to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": { f"confluence_oauth.{confluence_site_cloud_id}": refresh_token} }
+    )
+    return result
+
+def put_confluence_oauth(repository_url):
+    """
+    Inserts a new confluence oauth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": { "confluence_oauth": {} } }
+    )
+    return result
+
+
 def get_status(repository_url):
     """
     Retrieves the status of the llm generation process for a repository.
