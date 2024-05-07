@@ -345,17 +345,21 @@ function App() {
               </div>
 
               <div class="mt-3 ms-5 me-5">
-                <div class="maintitle opa-anime-two">
+                <div>
                   <div>
                     {isUserLoggedIn() ? (
-                      <div>
-                        {FetchRepoInputBox}
-                        <div class="row mt-3">
-                          <div class="col-md-6">{LogoutButton}</div>
+                      <div class="maintitle opa-anime-three">
+                        <div>
+                          {FetchRepoInputBox}
+                          <div class="row mt-3">
+                            <div class="col-md-6">{LogoutButton}</div>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <Login />
+                      <div class=" maintitle opa-anime-two">
+                        <Login />
+                      </div>
                     )}
                   </div>
                 </div>
