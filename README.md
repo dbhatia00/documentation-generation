@@ -22,6 +22,9 @@ Documentation is difficult to write and keep up to date. Tools exist to generate
 
 For more detailed descriptions of our design, please visit [our documentation directory](https://github.com/dbhatia00/documentation-generation/tree/main/documentation).
 
+This is how the user will interact with this application.
+![UserFlow](documentation/UserFlow.png)
+
 ## Initial Implementation Goals
 
 ### Description

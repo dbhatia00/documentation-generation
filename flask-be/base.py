@@ -385,7 +385,7 @@ def handle_webhook():
                 logging.info("LLM document generation successful.")
             else:
                 logging.error("LLM document generation failed.")
-
+            '''
             # Generate the confluence space for each registered confluence site
             commit_hash = get_latest_commit_hash(repo_url)
             if commit_hash is None:
@@ -412,7 +412,7 @@ def handle_webhook():
                     logging.info(
                         f"Confluence pages updated successfully. Site: {cloud_id}, Space key: {space_key}"
                     )
-
+                '''
     return "OK", 200
 
 

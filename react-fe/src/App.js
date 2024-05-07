@@ -50,6 +50,8 @@ function App() {
     console.log(localStorage);
   }, []);
   const handleSetupWebhook = async () => {
+    setCfOutput("");
+    setOutput("");
     if (!repoUrl) {
       setOutput(
         "Please provide a GitHub repository URL before setting up a webhook."
@@ -85,7 +87,7 @@ function App() {
         throw new Error(data.error || "Failed to set up webhook");
       }
     } catch (error) {
-      setOutput(`Error: ${error.message}`);
+      setOutput(`Error: ${error.message}, hook for this repo likely exists already`);
     }
   };
 
@@ -120,6 +122,8 @@ function App() {
   };
 
   const handleCreateConfluence = async () => {
+    setOutput("")
+    setCfOutput("")
     try {
       setCfOutput("Creating Confluence Space...");
       const response = await fetch("/api/create_confluence", {
