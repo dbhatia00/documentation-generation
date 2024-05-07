@@ -312,7 +312,6 @@ def create_confluence():
         )
 
 
-
 # Your webhook secret, which you must set both here and in your GitHub webhook settings
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "default_secret_if_not_set")
 
@@ -351,11 +350,12 @@ def handle_webhook():
             jsonify({"message": "Invalid payload format, missing repository URL"}),
             400,
         )
-    
+
     # error in payload, quit before regeneration attempt
     if "ref" not in payload:
         return jsonify({"message": f"No ref key in payload{payload}"}), 400
-    
+
+    # TODO: should we return 500 error when any of the regeneration steps fail?
     if payload["ref"] == "refs/heads/main":
         logging.info("New commit to main branch detected.")
         for commit in payload["commits"]:
@@ -370,7 +370,30 @@ def handle_webhook():
             else:
                 logging.error("LLM document generation failed.")
 
-            # Generate the confluence page
+            # Generate the confluence space for each registered confluence site
+            commit_hash = get_latest_commit_hash(repo_url)
+            if commit_hash is None:
+                logging.error("Failed to fetch commit hash from GitHub")
+
+            # TODO: replace GET_ALL_SITES_FROM_DB with actual db call
+            for cloud_id, refresh_token in GET_ALL_SITES_FROM_DB(repo_url):
+                confluence_access_code = get_new_confluence_token(
+                    refresh_token=refresh_token
+                )
+                success, space_key = (
+                    services.confluence.api.handle_repo_confluence_pages(
+                        repo_url=repo_url,
+                        cloud_id=cloud_id,
+                        confluence_access_code=confluence_access_code,
+                        commit_hash=commit_hash,
+                    )
+                )
+                if not success:
+                    logging.error("Failed to update Confluence pages")
+                else:
+                    logging.info(
+                        f"Confluence pages updated successfully. Site: {cloud_id}, Space key: {space_key}"
+                    )
 
     return "OK", 200
 
