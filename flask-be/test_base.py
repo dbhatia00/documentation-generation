@@ -53,7 +53,7 @@ class TestBase(unittest.TestCase):
             response = client.post('/api/create_confluence', json=payload)
             
             # Check the response status code
-            self.assertIn(response.status_code, [200, 500])
+            self.assertIn(response.status_code, [200, 400])
 
 
 if __name__ == '__main__':

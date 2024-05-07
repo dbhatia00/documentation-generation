@@ -26,7 +26,7 @@ For more detailed descriptions of our design, please visit [our documentation di
 
 ### Description
 
-Our project is web app that, when provided a github link, generates a confluence page describing what the app does based on classes/methods within. The confluence pages shall follow the same file structure as the source code and shall have a one to one mapping. Each page shall describe the source code at the functional level, ensuring that the source code is covered to an acceptable level. The code works on Java, Python, and Javascript targets. 
+Our project is web app that, when provided a github link, generates a confluence page describing what the app does based on classes/methods within. The confluence pages shall follow the same file structure as the source code and shall have a one to one mapping. Each page shall describe the source code at the functional level, ensuring that the source code is covered to an acceptable level. The code works on **Java, Python, and Javascript** targets. 
 
 # Run instructions
 
@@ -36,25 +36,29 @@ Our project is web app that, when provided a github link, generates a confluence
    1. Alternatively, generate a set of tokens from the Github Api and Confluence APIs
 2. Put file token_server.json under path flask-be
    1. Should be in the following format - 
-    `{
+    ```javascript
+    {
       "client_id": "{github API client ID}",
       "client_secret": "{github API client secret}",
       "confluence_client_id": "{confluence API client ID}",
       "confluence_client_secret": "{confluence API client secret}"
-    }`
+    }
+    ```
 3. Put file token_client.json under path react-fe/src
    1. Should be in the following format - 
-    `{
+    ```javascript
+    {
       "client_id": "{github API client ID}",
       "confluence_client_id": "{confluence API client ID}"
-    }`
+    }
+    ```
 
 ## Environment Variables to Make
 1. Install [NGrok](https://ngrok.com/) to your machine
 2. run `ngrok http 5000` and note the forwarding link (i.e. https://{...}.ngrok-free.app)
 3. export the following variables
    1. `export WEBHOOK_SECRET={your NGrok secret}`
-   2. `export WEBHOOK_PAYLOAD_URL={the above URL}/webhook1
+   2. `export WEBHOOK_PAYLOAD_URL={the above URL}/webhook1`
 
 ## Backend
 
