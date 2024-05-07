@@ -69,16 +69,16 @@ function App() {
       const data = await response.json();
 
       if (response.ok) {
-        setOutput("Webhook setup successfully!");
+        setCfOutput("Webhook setup successfully!");
       } else if (response.status === 500 && data.errors) {
         const hookAlreadyExists = data.errors.some(
           (error) => error.message === "Hook already exists on this repository"
         );
 
         if (hookAlreadyExists) {
-          setOutput("Webhook already exists on this repository.");
+          setCfOutput("Webhook already exists on this repository.");
         } else {
-          setOutput("Failed to set up webhook: " + data.message);
+          setCfOutput("Failed to set up webhook: " + data.message);
         }
       } else {
         throw new Error(data.error || "Failed to set up webhook");

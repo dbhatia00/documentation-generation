@@ -320,6 +320,8 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "default_secret_if_not_set")
 @app.route("/webhook", methods=["POST"])
 def handle_webhook():
 
+    logging.info("Webhook triggered")
+
     # Verify the request signature
     header_signature = request.headers.get("X-Hub-Signature")
     if header_signature is None:
@@ -336,7 +338,7 @@ def handle_webhook():
 
     # Process the payload
     payload = request.json
-    # Check if the 'ref' key is in the payload
+    # Check if the 'ref' key is in the payload (Ensure that package is correct)
     if "repository" in payload and "html_url" in payload["repository"]:
         repo_url = payload["repository"]["html_url"]
         logging.info(f"Received a webhook for repository: {repo_url}")
@@ -349,21 +351,26 @@ def handle_webhook():
             jsonify({"message": "Invalid payload format, missing repository URL"}),
             400,
         )
+    
+    # error in payload, quit before regeneration attempt
     if "ref" not in payload:
         return jsonify({"message": f"No ref key in payload{payload}"}), 400
+    
     if payload["ref"] == "refs/heads/main":
         logging.info("New commit to main branch detected.")
         for commit in payload["commits"]:
-            # TODO: Replace this with the documentation regeneration logic
+            # Spit out some basic info
             logging.info(f"Commit ID: {commit['id']}")
             logging.info(f"Commit message: {commit['message']}")
-            # Additional processing here if needed
-            # Directly call the documentation generation function
+
+            # Directly call the internal documentation generation function
             result, status = generate_documentation(repo_url)
             if status == 200:
                 logging.info("LLM document generation successful.")
             else:
                 logging.error("LLM document generation failed.")
+
+            # Generate the confluence page
 
     return "OK", 200
 
@@ -419,7 +426,7 @@ def setup_webhook():
             jsonify(
                 {
                     "error": "Failed to create webhook",
-                    "details": response.errors.message,
+                    "details": response["errors"][0]["message"],
                 }
             ),
             500,

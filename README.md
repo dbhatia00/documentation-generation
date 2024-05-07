@@ -7,6 +7,7 @@
     - [Description](#description)
 - [Run instructions](#run-instructions)
   - [Files to create](#files-to-create)
+  - [Environment Variables to Make](#environment-variables-to-make)
   - [Backend](#backend)
   - [Frontend](#frontend)
 - [Automated Tests](#automated-tests)
@@ -32,18 +33,28 @@ Our project is web app that, when provided a github link, generates a confluence
 ## Files to create
 
 1. Download token_server.json and token_client.json from Slack
-   1. Alternatively, generate a set of tokens from the Github Api 
+   1. Alternatively, generate a set of tokens from the Github Api and Confluence APIs
 2. Put file token_server.json under path flask-be
    1. Should be in the following format - 
-  {
-    "client_id": "{your ID}",
-    "client_secret": "{your secret}"
-  }
+    {
+      "client_id": "{github API client ID}",
+      "client_secret": "{github API client secret}",
+      "confluence_client_id": "{confluence API client ID}",
+      "confluence_client_secret": "{confluence API client secret}"
+    }
 3. Put file token_client.json under path react-fe/src
    1. Should be in the following format - 
-  {
-    "client_id": "{your ID}"
-  }
+    {
+      "client_id": "{github API client ID}",
+      "confluence_client_id": "{confluence API client ID}"
+    }
+
+## Environment Variables to Make
+1. Install [NGrok](https://ngrok.com/) to your machine
+2. run `ngrok http 5000` and note the forwarding link (i.e. https://{...}.ngrok-free.app)
+3. export the following variables
+   1. WEBHOOK_SECRET={your NGrok secret}
+   2. WEBHOOK_PAYLOAD_URL={the above URL}/webhook
 
 ## Backend
 
