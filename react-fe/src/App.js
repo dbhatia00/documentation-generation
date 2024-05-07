@@ -6,6 +6,7 @@ import {
   getAccessToken,
   getConfluenceAccessToken,
   isUserLoggedIn,
+  linkToConfluenceAccount
 } from "./util/login";
 import {
   MainPageText,
@@ -43,7 +44,7 @@ function App() {
       stateParam === "confluence" &&
       localStorage.getItem("confluenceAccessToken") === null
     ) {
-      getConfluenceAccessToken(codeParam, rerender, setRerender);
+      getConfluenceAccessToken(repoUrl, codeParam, rerender, setRerender);
     }
 
     console.log(localStorage);
@@ -208,11 +209,48 @@ function App() {
     </button>
   );
 
+  const handleConfluencePush = () => {
+    console.log(
+      "push to confluence with access code",
+      localStorage.getItem("confluenceAccessToken")
+    );
+    handleCreateConfluence()
+  };
+
+  const LinkConfluenceButton = (
+    <div>
+      {localStorage.getItem("confluenceAccessToken") ? (
+        <>
+          {!docContent && <p>You have linked to your Confluence account</p>}
+          <button
+            type="button"
+            class="btn btn-dark"
+            onClick={handleConfluencePush}
+            disabled={!output}
+          >
+            Push to Confluence
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            class="btn btn-dark"
+            onClick={linkToConfluenceAccount}
+          >
+            Link To Confluence
+          </button>
+        </>
+      )}
+    </div>
+  );
+
   const CreateConfluenceField = (
     <div>
       {
         <div>
-          {CreateConfluenceButton}
+          {LinkConfluenceButton}
+          {/* {localStorage.getItem("confluenceAccessToken") !== null && CreateConfluenceButton} */}
           {cfOutput && (
             <div class="fs-6">
               <CreateOutput />
@@ -262,7 +300,7 @@ function App() {
 
       {CreateConfluenceField}
 
-      {cfOutput === "Created Confluence Domain Successfully!" && repoUrl && (
+      {cfOutput === "Created Confluence Space Successfully!" && repoUrl && (
         <div>{SetupWebhookButton}</div>
       )}
     </div>
