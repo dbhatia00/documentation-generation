@@ -1,12 +1,21 @@
-from flask import Flask, jsonify, request
+import hmac
+import os
+import dotenv
+from flask import Flask, abort, jsonify, request
 from requests.auth import HTTPBasicAuth
 import requests
 import base64
 import json
 import services.confluence.api
+import logging
+from urllib.parse import urlparse
+
 
 from services.database.database import watch_mongodb_stream, start_llm_generation
+
 app = Flask(__name__)
+dotenv.load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 @app.route('/api/get_doc', methods=['POST'])
 def get_doc():
@@ -115,6 +124,7 @@ def get_access_token():
         # Return an error response if an exception occurs
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
+
 def retrieve_client_info(): 
     """
     DESCRIPTION: Retrieve GitHub client ID and client secret from a JSON file named 'token_server.json'.
@@ -199,6 +209,7 @@ def get_confluence_token():
 
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+
 
 def retrieve_confluence_info():
     """
@@ -301,5 +312,169 @@ def create_confluence():
         )
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+# Your webhook secret, which you must set both here and in your GitHub webhook settings
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "default_secret_if_not_set")
+
+
+@app.route("/webhook", methods=["POST"])
+def handle_webhook():
+
+    logging.info("Webhook triggered")
+
+    # Verify the request signature
+    header_signature = request.headers.get("X-Hub-Signature")
+    if header_signature is None:
+        abort(400, "Missing X-Hub-Signature required for webhook validation")
+
+    sha_name, signature = header_signature.split("=")
+    if sha_name != "sha1":
+        abort(501, "Operation not supported: We expect HMAC-SHA1 signatures")
+
+    # Create a hash using the secret and compare it to the request signature
+    mac = hmac.new(bytes(WEBHOOK_SECRET, "utf-8"), msg=request.data, digestmod="sha1")
+    if not hmac.compare_digest(mac.hexdigest(), signature):
+        abort(400, "Invalid signature")
+
+    # Process the payload
+    payload = request.json
+    # Check if the 'ref' key is in the payload (Ensure that package is correct)
+    if "repository" in payload and "html_url" in payload["repository"]:
+        repo_url = payload["repository"]["html_url"]
+        logging.info(f"Received a webhook for repository: {repo_url}")
+        parsed_url = urlparse(repo_url)
+        path_parts = parsed_url.path.strip("/").split("/")
+        repo_url = "/".join(path_parts[-2:])
+        logging.info(f"now repository url: {repo_url}")
+    else:
+        return (
+            jsonify({"message": "Invalid payload format, missing repository URL"}),
+            400,
+        )
+    
+    # error in payload, quit before regeneration attempt
+    if "ref" not in payload:
+        return jsonify({"message": f"No ref key in payload{payload}"}), 400
+    
+    if payload["ref"] == "refs/heads/main":
+        logging.info("New commit to main branch detected.")
+        for commit in payload["commits"]:
+            # Spit out some basic info
+            logging.info(f"Commit ID: {commit['id']}")
+            logging.info(f"Commit message: {commit['message']}")
+
+            # Directly call the internal documentation generation function
+            result, status = generate_documentation(repo_url)
+            if status == 200:
+                logging.info("LLM document generation successful.")
+            else:
+                logging.error("LLM document generation failed.")
+
+            # Generate the confluence page
+
+    return "OK", 200
+
+
+@app.route("/setup-webhook", methods=["POST"])
+def setup_webhook():
+    data = request.get_json()
+    repo_url = data.get("repo_url")
+    if not repo_url:
+        return (
+            jsonify({"error": "Please provide a GitHub repository URL"}),
+            400,
+        )
+
+    repo_owner = repo_url.split("/")[0]
+    repo_name = repo_url.split("/")[1]
+
+    # Extract the GitHub OAuth token from the Authorization header
+    authorization_header = request.headers.get("Authorization")
+    if not authorization_header:
+        return jsonify({"error": "Authorization header is missing"}), 401
+
+    payload_url = os.getenv("WEBHOOK_PAYLOAD_URL")
+    webhook_secret = os.getenv("WEBHOOK_SECRET")
+
+    if not payload_url or not webhook_secret:
+        return (
+            jsonify(
+                {
+                    "error": f"Missing required parameters: webhook_payload_url and webhook_secret{payload_url},{webhook_secret}"
+                }
+            ),
+            400,
+        )
+    logging.info("logging sth here")
+    # Call the function to create a webhook
+    response = create_webhook(
+        authorization_header, repo_owner, repo_name, payload_url, webhook_secret
+    )
+    if response.get("id"):
+        return (
+            jsonify(
+                {
+                    "message": "Webhook created successfully",
+                    "webhook_id": response["id"],
+                }
+            ),
+            201,
+        )
+    else:
+        logging.info(response)
+        return (
+            jsonify(
+                {
+                    "error": "Failed to create webhook",
+                    "details": response["errors"][0]["message"],
+                }
+            ),
+            500,
+        )
+
+
+def create_webhook(
+    authorization_header, repo_owner, repo_name, webhook_url, webhook_secret
+):
+    """Create a GitHub webhook."""
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/hooks"
+    headers = {
+        "Authorization": authorization_header,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    data = {
+        "config": {
+            "url": webhook_url,
+            "content_type": "json",
+            "secret": webhook_secret,
+        },
+        "events": ["push", "pull_request", "create"],
+        "active": True,
+    }
+    response = requests.post(url, json=data, headers=headers)
+    return response.json()
+
+
+def generate_documentation(repo_url):
+    """
+    Generate documentation for the given repository URL.
+    """
+    api_url = f"https://api.github.com/repos/{repo_url}/contents/"
+    response = requests.get(api_url)
+
+    if response.status_code != 200:
+        return {"error": "Failed to fetch source code from GitHub"}, 500
+
+    repo_url = "https://github.com/" + repo_url
+    url_to_process_repo = f"https://bjxdbdicckttmzhrhnpl342k2q0pcthx.lambda-url.us-east-1.on.aws/?repo_url={repo_url}"
+
+    start_llm_generation(repo_url)
+    requests.get(url_to_process_repo)
+
+    database_response = watch_mongodb_stream(repo_url)
+
+    return {"doc_content": database_response.model_dump()}, 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

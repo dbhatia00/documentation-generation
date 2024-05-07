@@ -48,6 +48,45 @@ function App() {
 
     console.log(localStorage);
   }, []);
+  const handleSetupWebhook = async () => {
+    if (!repoUrl) {
+      setOutput(
+        "Please provide a GitHub repository URL before setting up a webhook."
+      );
+      return;
+    }
+    try {
+      const response = await fetch("/setup-webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setCfOutput("Webhook setup successfully!");
+      } else if (response.status === 500 && data.errors) {
+        const hookAlreadyExists = data.errors.some(
+          (error) => error.message === "Hook already exists on this repository"
+        );
+
+        if (hookAlreadyExists) {
+          setCfOutput("Webhook already exists on this repository.");
+        } else {
+          setCfOutput("Failed to set up webhook: " + data.message);
+        }
+      } else {
+        throw new Error(data.error || "Failed to set up webhook");
+      }
+    } catch (error) {
+      setOutput(`Error: ${error.message}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -183,12 +222,21 @@ function App() {
       }
     </div>
   );
+  const SetupWebhookButton = (
+    <button
+      type="button"
+      className="btn btn-dark mb-4"
+      onClick={handleSetupWebhook}
+    >
+      Setup Webhook
+    </button>
+  );
 
   const FetchRepoInputBox = (
     <div>
       <form onSubmit={handleSubmit}>
-        <div class="input-group mb-4">
-          <span class="input-group-text" id="enter-url">
+        <div className="input-group mb-4">
+          <span className="input-group-text" id="enter-url">
             Enter GitHub Repository
           </span>
           <input
@@ -196,23 +244,27 @@ function App() {
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
             required
-            class="form-control"
+            className="form-control"
             id="basic-url"
             aria-describedby="enter-url"
             placeholder="{username}/{repo name}"
           />
-          <button class="btn btn-dark" type="submit">
+          <button className="btn btn-dark" type="submit">
             Fetch
           </button>
         </div>
       </form>
       {output && (
-        <div class="fs-6">
+        <div className="fs-6">
           <FetchOutput />
         </div>
       )}
 
       {CreateConfluenceField}
+
+      {cfOutput === "Created Confluence Domain Successfully!" && repoUrl && (
+        <div>{SetupWebhookButton}</div>
+      )}
     </div>
   );
 
