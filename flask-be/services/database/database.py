@@ -24,6 +24,7 @@ from typing import Optional
 from services.database.datamodels import (
     RepositoryConfluenceOutput,
     FileConfluenceOutput,
+    Status,
     database_json_to_respsitory_confluence_output,
 )
 
@@ -168,7 +169,7 @@ def delete_file_from_documentation(repository_url: str, file_key: str) -> Update
     )
     return result
 
-#STATUS OPERATIONS
+# STATUS OPERATIONS
 def start_llm_generation(repository_url: str) -> InsertOneResult:
     """
     Updates the status of the llm generation process to "In progress".
@@ -179,6 +180,9 @@ def start_llm_generation(repository_url: str) -> InsertOneResult:
     Returns:
     - The result of the update operation.
     """
+    if(get_documentation_by_url(repository_url)):
+        delete_documentation_by_url(repository_url)
+        delete_status_by_url(repository_url)
     status_obj = Status(repository_url=repository_url, overall_status="In progress")
     result = db["status"].insert_one(status_obj.model_dump())
     return result
@@ -212,7 +216,6 @@ def start_file_processing(repository_url, file_name):
     """
     file_name = file_name.replace('.', '_')
     if(db["status"].find_one({"repository_url": repository_url}) is None):
-        print("Not found")
         start_llm_generation(repository_url)
     result = db["status"].update_one(
         {"repository_url": repository_url},
@@ -236,6 +239,57 @@ def complete_file_processing(repository_url, file_name):
         {"$set": {f"file_level_status.{file_name}": "Completed"}}
     )
     return result
+
+def get_all_tokens(repository_url):
+    """
+    Retrieves the confluence oauth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to find.
+
+    Returns:
+    - dict or None: Returns the confluence oauth if found, otherwise None.
+    """
+    result = collection.find_one({"repository_url": repository_url}, {"_id": 0, "confluence_oauth": 1})
+    if result:
+        return result.get("confluence_oauth")
+    return None
+
+def update_single_confluence_oauth(repository_url, confluence_site_cloud_id, refresh_token):
+    """
+    Updates the Confluence OAuth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+    - confluence_site_cloud_id (str): The cloud id of the Confluence site.
+    - refresh_token (str): The new refresh token to set.
+    - db_collection: The collection object representing the database collection to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": { f"confluence_oauth.{confluence_site_cloud_id}": refresh_token} }
+    )
+    return result
+
+def put_confluence_oauth(repository_url):
+    """
+    Inserts a new confluence oauth for a repository.
+
+    Parameters:
+    - repository_url (str): The URL of the repository to update.
+
+    Returns:
+    - The result of the update operation.
+    """
+    result = collection.update_one(
+        {"repository_url": repository_url},
+        {"$set": { "confluence_oauth": {} } }
+    )
+    return result
+
 
 def get_status(repository_url):
     """
@@ -281,7 +335,18 @@ def get_status_by_file(repository_url, file_name):
     # Return None if the file status is not found.
     return None
 
+def delete_status_by_url(repository_url: str) -> DeleteResult:
+    """
+    Deletes the status document for a repository.
 
+    Parameters:
+    - repository_url (str): The URL of the repository to delete.
+
+    Returns:
+    - The result of the delete operation.
+    """
+    result = db["status"].delete_one({"repository_url": repository_url})
+    return result
 
 def watch_mongodb_stream(repository_url):
     result = db["status"].find_one({"repository_url": repository_url}, {"_id": 1})
