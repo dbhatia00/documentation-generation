@@ -138,7 +138,11 @@ button {
 }
 
 .opa-anime-two {
-  animation: reveal 1.5s steps(30) 5.5s forwards;
+  animation: reveal 1.5s steps(30) 9.5s forwards;
+}
+
+.opa-anime-three {
+  animation: reveal 1.5s steps(30) 4s forwards;
 }
 
 .maintitle {
