@@ -92,6 +92,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setOutput("Generating Content..."); // Generating Content...
+    setCfOutput("")
     try {
       // Sends the repo URL to the backend
       const response = await fetch("/api/get_doc", {
@@ -138,7 +139,7 @@ function App() {
         alert("Confluence Page Created Successfully!");
         setCfOutput("Created Confluence Domain Successfully!");
       } else {
-        alert("Failed to create confluence");
+        alert("Failed to create confluence ");
         setCfOutput("Failed to create confluence");
       }
     } catch (error) {
@@ -188,6 +189,7 @@ function App() {
         <div>
           {cfOutput} Don't forget to refresh your Confluence{" "}
           <i class="fa-solid fa-thumbs-up"></i>
+        <div>{SetupWebhookButton}</div>
         </div>
       );
     } else {
@@ -226,7 +228,7 @@ function App() {
             type="button"
             class="btn btn-dark"
             onClick={handleConfluencePush}
-            disabled={!output}
+            
           >
             Push to Confluence
           </button>
@@ -288,7 +290,7 @@ function App() {
             placeholder="{username}/{repo name}"
           />
           <button className="btn btn-dark" type="submit">
-            Fetch
+            Generate Docs
           </button>
         </div>
       </form>

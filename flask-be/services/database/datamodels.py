@@ -184,7 +184,7 @@ def database_json_to_respsitory_confluence_output(json_data: dict) -> Repository
     formatted_json["repository_summary"] = json_data.get("repository_summary", "")
     formatted_json["confluence_space_id"] = json_data.get("confluence_id", "")
     formatted_json["confluence_domain"] = json_data.get("confluence_domain", "")
-    formatted_json["confluence_oauth"] = json_data.get("confluence_oauth")
+    formatted_json["confluence_oauth"] = json_data.get("confluence_oauth", {})
     formatted_json["repo_overview_data"] = RepoOverviewOutput(**json_data.get("repo_overview_data")) if json_data.get("repo_overview_data") else None
     formatted_json["files"] = {}
     files = json_data["files"]
