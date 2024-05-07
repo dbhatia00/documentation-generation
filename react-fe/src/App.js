@@ -22,6 +22,7 @@ function App() {
   const [output, setOutput] = useState("");
   const [cfOutput, setCfOutput] = useState("");
   const [rerender, setRerender] = useState(false);
+  const [commitHash, setCommitHash] = useState("");
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -104,6 +105,8 @@ function App() {
       const data = await response.json();
       if (response.ok) {
         setdocContent(data.doc_content); // Decode base64 content
+        setCommitHash(data.commit_hash);
+        console.log(commitHash)
         setOutput("Fetch successful!");
       } else {
         setOutput(data.error || "Failed to fetch doc");
@@ -126,6 +129,7 @@ function App() {
           repo_url: "https://github.com/" + repoUrl,
           cloud_id: localStorage.getItem("confluenceCloudId"),
           confluence_access_code: localStorage.getItem("confluenceAccessToken"),
+          commit_hash: commitHash,
         }),
       });
 
@@ -200,7 +204,7 @@ function App() {
       class="btn btn-dark mb-4"
       onClick={handleCreateConfluence}
     >
-      Create Confluence Domain
+      Push to a new Confluence space
     </button>
   );
 
