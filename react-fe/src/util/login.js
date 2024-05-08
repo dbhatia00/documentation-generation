@@ -43,20 +43,16 @@ export const getAccessToken = async (codeParam, rerender, setRerender) => {
 };
 
 export const getConfluenceAccessToken = async (
-  repoUrl,
   codeParam,
   rerender,
   setRerender
 ) => {
   try {
-    await fetch("/api/get_confluence_token", {
-      method: "POST",
+    await fetch("/api/get_confluence_token?code=" + codeParam, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        repo_url: "https://github.com/" + repoUrl,
-        code: codeParam }),
     })
       .then((response) => {
         return response.json();
@@ -65,6 +61,7 @@ export const getConfluenceAccessToken = async (
         if (data.access_token) {
           localStorage.setItem("confluenceAccessToken", data.access_token);
           localStorage.setItem("confluenceCloudId", data.cloud_id);
+          localStorage.setItem("confluenceRefreshToken", data.refresh_token);
           setRerender(!rerender);
         }
       });
@@ -75,8 +72,7 @@ export const getConfluenceAccessToken = async (
 
 export const isUserLoggedIn = () => {
   return (
-    // localStorage.getItem("accessToken") !== null &&
-    // localStorage.getItem("confluenceAccessToken") !== null
-    localStorage.getItem("accessToken") !== null
+    localStorage.getItem("accessToken") !== null &&
+    localStorage.getItem("confluenceAccessToken") !== null
   );
 };

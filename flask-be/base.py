@@ -151,7 +151,7 @@ def retrieve_client_info():
     return client_id, client_secret
 
 
-@app.route("/api/get_confluence_token", methods=["POST"])
+@app.route("/api/get_confluence_token", methods=["GET"])
 def get_confluence_token():
     """
     DESCRIPTION: A function to get the Confluence access token.
@@ -166,9 +166,7 @@ def get_confluence_token():
     - Outward facing (called from the Frontend)
     """
     try:
-        data = request.get_json()
-        client_code = data.get("code")
-        repo_url = data.get("repo_url")
+        client_code = request.args.get("code")
         if not client_code:
             return jsonify({'error': 'Login error with Confluence'}), 400
 
@@ -197,18 +195,13 @@ def get_confluence_token():
             if cloudid_response.status_code == 200:
                 refresh_token = response_json["refresh_token"]
                 cloud_id = cloudid_response.json()[0]["id"]
-                # adds {cloud_id: refresh_token} to db for repo_url
-                update_single_confluence_oauth(
-                    repository_url=repo_url,
-                    confluence_site_cloud_id=cloud_id,
-                    refresh_token=refresh_token,
-                )
                 return (
                     jsonify(
                         {
                             "access_token": response_json["access_token"],
                             "cloud_id": cloud_id,
                             "site_url": cloudid_response.json()[0]["url"],
+                            "refresh_token": refresh_token,
                         }
                     ),
                     200,
@@ -301,11 +294,25 @@ def create_confluence():
     cloud_id = data.get("cloud_id")
     confluence_access_code = data.get("confluence_access_code")
     commit_hash = data.get("commit_hash")
+    refresh_token = data.get("refresh_token")
 
     # Check if the required data is provided
-    if not repo_url or not cloud_id or not confluence_access_code:
+    if (
+        not repo_url
+        or not cloud_id
+        or not confluence_access_code
+        or not commit_hash
+        or not refresh_token
+    ):
         # Return an error response if any of the required data is missing
         return jsonify({"error": "Please provide all variables"}), 400
+
+    # adds {cloud_id: refresh_token} to db for repo_url
+    update_single_confluence_oauth(
+        repository_url=repo_url,
+        confluence_site_cloud_id=cloud_id,
+        refresh_token=refresh_token,
+    )
 
     success, space_key = services.confluence.api.handle_repo_confluence_pages(
         repo_url=repo_url,
@@ -379,25 +386,30 @@ def handle_webhook():
             logging.info(f"Commit ID: {commit['id']}")
             logging.info(f"Commit message: {commit['message']}")
 
+            # retrieve renewal tokens for all confluence sites associated with the repo
+            tokens_dict = get_all_tokens("https://github.com/" + repo_url)
+
             # Directly call the internal documentation generation function
             result, status = generate_documentation(repo_url)
             if status == 200:
                 logging.info("LLM document generation successful.")
             else:
                 logging.error("LLM document generation failed.")
-            '''
-            # Generate the confluence space for each registered confluence site
+
             commit_hash = get_latest_commit_hash(repo_url)
             if commit_hash is None:
                 logging.error("Failed to fetch commit hash from GitHub")
 
-            tokens_dict = get_all_tokens(repo_url)
+            # Generate the confluence space for each registered confluence site
+            repo_url = "https://github.com/" + repo_url
             for cloud_id, refresh_token in tokens_dict.items():
                 confluence_access_code = get_new_confluence_token(
                     refresh_token=refresh_token,
                     repo_url=repo_url,
                     cloud_id=cloud_id,
                 )
+                if not confluence_access_code:
+                    logging.error("get_new_confluence_token failed")
                 success, space_key = (
                     services.confluence.api.handle_repo_confluence_pages(
                         repo_url=repo_url,
@@ -412,7 +424,7 @@ def handle_webhook():
                     logging.info(
                         f"Confluence pages updated successfully. Site: {cloud_id}, Space key: {space_key}"
                     )
-                '''
+
     return "OK", 200
 
 
@@ -467,7 +479,7 @@ def setup_webhook():
             jsonify(
                 {
                     "error": "Failed to create webhook",
-                    "details": response["errors"][0]["message"],
+                    "details": response,
                 }
             ),
             500,
