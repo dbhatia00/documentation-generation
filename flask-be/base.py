@@ -195,18 +195,13 @@ def get_confluence_token():
             if cloudid_response.status_code == 200:
                 refresh_token = response_json["refresh_token"]
                 cloud_id = cloudid_response.json()[0]["id"]
-                # adds {cloud_id: refresh_token} to db for repo_url
-                update_single_confluence_oauth(
-                    repository_url="TEST_REPLACE",
-                    confluence_site_cloud_id=cloud_id,
-                    refresh_token=refresh_token,
-                )
                 return (
                     jsonify(
                         {
                             "access_token": response_json["access_token"],
                             "cloud_id": cloud_id,
                             "site_url": cloudid_response.json()[0]["url"],
+                            "refresh_token": refresh_token,
                         }
                     ),
                     200,
@@ -299,11 +294,25 @@ def create_confluence():
     cloud_id = data.get("cloud_id")
     confluence_access_code = data.get("confluence_access_code")
     commit_hash = data.get("commit_hash")
+    refresh_token = data.get("refresh_token")
 
     # Check if the required data is provided
-    if not repo_url or not cloud_id or not confluence_access_code:
+    if (
+        not repo_url
+        or not cloud_id
+        or not confluence_access_code
+        or not commit_hash
+        or not refresh_token
+    ):
         # Return an error response if any of the required data is missing
         return jsonify({"error": "Please provide all variables"}), 400
+
+    # adds {cloud_id: refresh_token} to db for repo_url
+    update_single_confluence_oauth(
+        repository_url=repo_url,
+        confluence_site_cloud_id=cloud_id,
+        refresh_token=refresh_token,
+    )
 
     success, space_key = services.confluence.api.handle_repo_confluence_pages(
         repo_url=repo_url,

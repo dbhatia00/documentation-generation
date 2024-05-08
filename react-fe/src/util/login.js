@@ -61,6 +61,7 @@ export const getConfluenceAccessToken = async (
         if (data.access_token) {
           localStorage.setItem("confluenceAccessToken", data.access_token);
           localStorage.setItem("confluenceCloudId", data.cloud_id);
+          localStorage.setItem("confluenceRefreshToken", data.refresh_token);
           setRerender(!rerender);
         }
       });

@@ -130,6 +130,7 @@ function App() {
           cloud_id: localStorage.getItem("confluenceCloudId"),
           confluence_access_code: localStorage.getItem("confluenceAccessToken"),
           commit_hash: commitHash,
+          refresh_token: localStorage.getItem("confluenceRefreshToken"),
         }),
       });
 
