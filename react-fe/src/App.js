@@ -136,7 +136,7 @@ function App() {
 
       if (response.ok) {
         alert("Confluence Page Created Successfully!");
-        setCfOutput("Created Confluence Domain Successfully!");
+        setCfOutput("Created Confluence Space Successfully!");
       } else {
         alert("Failed to create confluence ");
         setCfOutput("Failed to create confluence");
@@ -183,7 +183,7 @@ function App() {
   };
 
   const CreateOutput = () => {
-    if (cfOutput === "Created Confluence Domain Successfully!") {
+    if (cfOutput === "Created Confluence Space Successfully!") {
       return (
         <div>
           {cfOutput} Don't forget to refresh your Confluence{" "}
@@ -213,7 +213,7 @@ function App() {
     <div>
       {
         <div>
-          {CreateConfluenceButton}
+          {commitHash &&CreateConfluenceButton}
           {cfOutput && (
             <div class="fs-6">
               <CreateOutput />
