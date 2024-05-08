@@ -24,11 +24,11 @@ export default function Login() {
           ? "Github account has linked"
           : GithubLoginButton}
       </div>
-      {/* <div>
+      <div>
         {localStorage.getItem("confluenceAccessToken") !== null
           ? "Confluence account has linked"
           : ConfluenceLoginButton}
-      </div> */}
+      </div>
     </div>
   );
 }

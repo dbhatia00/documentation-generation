@@ -151,7 +151,7 @@ def retrieve_client_info():
     return client_id, client_secret
 
 
-@app.route("/api/get_confluence_token", methods=["POST"])
+@app.route("/api/get_confluence_token", methods=["GET"])
 def get_confluence_token():
     """
     DESCRIPTION: A function to get the Confluence access token.
@@ -166,9 +166,7 @@ def get_confluence_token():
     - Outward facing (called from the Frontend)
     """
     try:
-        data = request.get_json()
-        client_code = data.get("code")
-        repo_url = data.get("repo_url")
+        client_code = request.args.get("code")
         if not client_code:
             return jsonify({'error': 'Login error with Confluence'}), 400
 
@@ -199,7 +197,7 @@ def get_confluence_token():
                 cloud_id = cloudid_response.json()[0]["id"]
                 # adds {cloud_id: refresh_token} to db for repo_url
                 update_single_confluence_oauth(
-                    repository_url=repo_url,
+                    repository_url="TEST_REPLACE",
                     confluence_site_cloud_id=cloud_id,
                     refresh_token=refresh_token,
                 )

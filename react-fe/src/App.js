@@ -6,7 +6,6 @@ import {
   getAccessToken,
   getConfluenceAccessToken,
   isUserLoggedIn,
-  linkToConfluenceAccount
 } from "./util/login";
 import {
   MainPageText,
@@ -44,14 +43,12 @@ function App() {
       stateParam === "confluence" &&
       localStorage.getItem("confluenceAccessToken") === null
     ) {
-      getConfluenceAccessToken(repoUrl, codeParam, rerender, setRerender);
+      getConfluenceAccessToken(codeParam, rerender, setRerender);
     }
 
     console.log(localStorage);
   }, []);
   const handleSetupWebhook = async () => {
-    setCfOutput("");
-    setOutput("");
     if (!repoUrl) {
       setOutput(
         "Please provide a GitHub repository URL before setting up a webhook."
@@ -94,7 +91,6 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setOutput("Generating Content..."); // Generating Content...
-    setCfOutput("")
     try {
       // Sends the repo URL to the backend
       const response = await fetch("/api/get_doc", {
@@ -122,8 +118,6 @@ function App() {
   };
 
   const handleCreateConfluence = async () => {
-    setOutput("")
-    setCfOutput("")
     try {
       setCfOutput("Creating Confluence Space...");
       const response = await fetch("/api/create_confluence", {
@@ -193,7 +187,6 @@ function App() {
         <div>
           {cfOutput} Don't forget to refresh your Confluence{" "}
           <i class="fa-solid fa-thumbs-up"></i>
-        <div>{SetupWebhookButton}</div>
         </div>
       );
     } else {
@@ -215,48 +208,11 @@ function App() {
     </button>
   );
 
-  const handleConfluencePush = () => {
-    console.log(
-      "push to confluence with access code",
-      localStorage.getItem("confluenceAccessToken")
-    );
-    handleCreateConfluence()
-  };
-
-  const LinkConfluenceButton = (
-    <div>
-      {localStorage.getItem("confluenceAccessToken") ? (
-        <>
-          {!docContent && <p>You have linked to your Confluence account</p>}
-          <button
-            type="button"
-            class="btn btn-dark"
-            onClick={handleConfluencePush}
-            
-          >
-            Push to Confluence
-          </button>
-        </>
-      ) : (
-        <>
-          <button
-            type="button"
-            class="btn btn-dark"
-            onClick={linkToConfluenceAccount}
-          >
-            Link To Confluence
-          </button>
-        </>
-      )}
-    </div>
-  );
-
   const CreateConfluenceField = (
     <div>
       {
         <div>
-          {LinkConfluenceButton}
-          {/* {localStorage.getItem("confluenceAccessToken") !== null && CreateConfluenceButton} */}
+          {CreateConfluenceButton}
           {cfOutput && (
             <div class="fs-6">
               <CreateOutput />
