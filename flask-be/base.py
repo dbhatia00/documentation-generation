@@ -386,6 +386,9 @@ def handle_webhook():
             logging.info(f"Commit ID: {commit['id']}")
             logging.info(f"Commit message: {commit['message']}")
 
+            # retrieve renewal tokens for all confluence sites associated with the repo
+            tokens_dict = get_all_tokens("https://github.com/" + repo_url)
+
             # Directly call the internal documentation generation function
             result, status = generate_documentation(repo_url)
             if status == 200:
@@ -393,18 +396,20 @@ def handle_webhook():
             else:
                 logging.error("LLM document generation failed.")
 
-            # Generate the confluence space for each registered confluence site
             commit_hash = get_latest_commit_hash(repo_url)
             if commit_hash is None:
                 logging.error("Failed to fetch commit hash from GitHub")
 
-            tokens_dict = get_all_tokens(repo_url)
+            # Generate the confluence space for each registered confluence site
+            repo_url = "https://github.com/" + repo_url
             for cloud_id, refresh_token in tokens_dict.items():
                 confluence_access_code = get_new_confluence_token(
                     refresh_token=refresh_token,
                     repo_url=repo_url,
                     cloud_id=cloud_id,
                 )
+                if not confluence_access_code:
+                    logging.error("get_new_confluence_token failed")
                 success, space_key = (
                     services.confluence.api.handle_repo_confluence_pages(
                         repo_url=repo_url,
@@ -474,7 +479,7 @@ def setup_webhook():
             jsonify(
                 {
                     "error": "Failed to create webhook",
-                    "details": response["errors"][0]["message"],
+                    "details": response,
                 }
             ),
             500,
