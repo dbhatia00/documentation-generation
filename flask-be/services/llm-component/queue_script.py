@@ -39,6 +39,7 @@ def handle_message(repo_url):
     logger.info(f"Processing repository URL: {repo_url}")
     try:
         download_and_process_repo_url(repo_url, supported_languages)
+        complete_llm_generation(repo_url)
     except Exception as e:
         logger.error(f"Error processing repository: {repo_url}")
         logger.error(e)

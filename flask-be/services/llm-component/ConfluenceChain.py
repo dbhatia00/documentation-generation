@@ -39,7 +39,7 @@ prompt = ChatPromptTemplate.from_messages(
 
             1. **Overall Summary**: A general overview of the file's purpose and functionality within its application context.
             2. **Packages**: Identify and describe the main packages utilized in the file, outlining their usage and purpose.
-            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations. Additional details about the functions should also be included.
+            3. **Function Level**: Provide details on the functions defined within the file, including their names, purposes, and any relevant class declarations. Additional details about the functions should also be included. Make sure to include all functions in the file.
 
             This structured output should help developers understand the key components and functionality of the file for development or maintenance purposes.
             
