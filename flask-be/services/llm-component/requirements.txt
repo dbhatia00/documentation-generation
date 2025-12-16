@@ -12,3 +12,4 @@ langchain_openai
 matplotlib
 GitPython
 boto3s
+fonttools>=4.61.0 # not directly required, pinned by Snyk to avoid a vulnerability
